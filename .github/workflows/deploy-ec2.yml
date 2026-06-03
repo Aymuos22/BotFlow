@@ -1,0 +1,121 @@
+# Deploy API to EC2 (Docker Compose).
+#
+# Required GitHub secrets:
+#   EC2_HOST            — public DNS or IP
+#   EC2_USER            — e.g. ec2-user (AL2023) or ubuntu
+#   EC2_SSH_PRIVATE_KEY — full PEM/OpenSSH private key (with BEGIN/END lines)
+#   APP_ENV, DEBUG, SECRET_KEY, DATABASE_URL
+#   WEAVIATE_URL, WEAVIATE_API_KEY
+#   LLM_PROVIDER, LLM_MODEL, OPENAI_API_KEY
+#   GROQ_API_KEY (only if LLM_PROVIDER=groq)
+#   S3_BUCKET_NAME, AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+#   PORTAL_ADMIN_API_KEY, SUPABASE_JWT_SECRET, CORS_ALLOW_ALL
+#
+# NOTE: Twilio credentials (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN,
+#   TWILIO_WHATSAPP_NUMBER) are stored per-company in the database
+#   (encrypted) and are NOT needed as GitHub secrets.
+#
+# Optional: EC2_DEPLOY_PATH (default /opt/chatbot-engine)
+
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [prod]
+  workflow_dispatch:
+    inputs:
+      git_ref:
+        description: "Branch / tag / SHA to deploy"
+        required: false
+        default: "prod"
+
+concurrency:
+  group: deploy-ec2
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Generate .env on the runner ──────────────────────────────
+      - name: Build .env file
+        run: |
+          echo "APP_ENV=${{ secrets.APP_ENV }}"                           > .env
+          echo "DEBUG=${{ secrets.DEBUG }}"                               >> .env
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}"                     >> .env
+          echo "LOG_LEVEL=INFO"                                            >> .env
+          echo "EXPOSE_INTERNAL_ERROR_DETAIL=false"                        >> .env
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}"                 >> .env
+          echo "WEAVIATE_URL=${{ secrets.WEAVIATE_URL }}"                 >> .env
+          echo "WEAVIATE_API_KEY=${{ secrets.WEAVIATE_API_KEY }}"         >> .env
+          echo "LLM_PROVIDER=${{ secrets.LLM_PROVIDER }}"                 >> .env
+          echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}"                 >> .env
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}"             >> .env
+          echo "LLM_MODEL=${{ secrets.LLM_MODEL }}"                       >> .env
+          echo "LLM_TEMPERATURE=1"                                         >> .env
+          echo "LLM_MAX_COMPLETION_TOKENS=1024"                            >> .env
+          echo "LLM_TOP_P=1"                                               >> .env
+          echo "LLM_STREAM=false"                                          >> .env
+          echo "S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME || 'mindoraxai-documents' }}" >> .env
+          echo "S3_REGION=${{ secrets.AWS_REGION || 'us-east-1' }}"       >> .env
+          echo "AWS_REGION=${{ secrets.AWS_REGION || 'us-east-1' }}"      >> .env
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}"       >> .env
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
+          echo "PORTAL_ADMIN_API_KEY=${{ secrets.PORTAL_ADMIN_API_KEY }}" >> .env
+          echo "SUPABASE_JWT_SECRET=${{ secrets.SUPABASE_JWT_SECRET }}"   >> .env
+          echo "CORS_ALLOW_ALL=${{ secrets.CORS_ALLOW_ALL }}"             >> .env
+          echo "RAG_SCORE_THRESHOLD=0.4"                                   >> .env
+          echo "RAG_TOP_K=5"                                               >> .env
+          echo "TWILIO_TIMEOUT_SECONDS=30"                                 >> .env
+
+      # ── 2. Copy .env to EC2 ─────────────────────────────────────────
+      - name: Copy .env to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          source: .env
+          target: ${{ secrets.EC2_DEPLOY_PATH || '/opt/chatbot-engine' }}
+
+      # ── 3. SSH: clone (first run) + git pull + docker up ────────────
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          command_timeout: 45m
+          script: |
+            DEPLOY_PATH="${{ secrets.EC2_DEPLOY_PATH }}"
+            if [ -z "$DEPLOY_PATH" ]; then DEPLOY_PATH="/opt/chatbot-engine"; fi
+
+            REPO_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+
+            if [ ! -d "$DEPLOY_PATH/.git" ]; then
+              sudo mkdir -p "$DEPLOY_PATH"
+              sudo chown "$(id -u):$(id -g)" "$DEPLOY_PATH"
+              git clone --depth=1 --branch prod "$REPO_URL" "$DEPLOY_PATH"
+            fi
+
+            git -C "$DEPLOY_PATH" remote set-url origin "$REPO_URL"
+            chmod 600 "$DEPLOY_PATH/.env"
+
+            # ── Install Docker if missing ─────────────────────────────
+            if ! command -v docker &>/dev/null; then
+              echo "Docker not found — running bootstrap..."
+              sudo bash "$DEPLOY_PATH/scripts/ec2-bootstrap.sh"
+            fi
+
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              REF="${{ github.event.inputs.git_ref }}"
+              if [ -z "$REF" ]; then REF="prod"; fi
+            else
+              REF="${{ github.sha }}"
+            fi
+
+            cd "$DEPLOY_PATH"
+            # After Caddy is installed (nip.io HTTPS), use zero-downtime API rollout:
+            # ZERO_DOWNTIME=1 bash scripts/deploy-remote.sh "$REF"
+            bash scripts/deploy-remote.sh "$REF"

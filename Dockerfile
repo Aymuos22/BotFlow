@@ -1,0 +1,102 @@
+# ────────────────────────────────────────────────────────────────────────────
+# Stage 1: builder
+# Install dependencies in an isolated layer so the final image stays lean.
+# ────────────────────────────────────────────────────────────────────────────
+FROM python:3.10-slim AS builder
+
+WORKDIR /build
+
+# System deps for cryptography / psycopg2 compilation (if needed)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# Stage 2: runtime
+# ────────────────────────────────────────────────────────────────────────────
+FROM python:3.10-slim AS runtime
+
+# Non-root user for security.
+# Create a proper home directory so HuggingFace / fastembed cache dirs are writable.
+RUN groupadd -r appuser && useradd -r -g appuser -m -d /home/appuser appuser \
+    && mkdir -p /home/appuser/.cache/huggingface/xet/logs \
+    && chown -R appuser:appuser /home/appuser
+
+# Runtime media conversion for inbound WhatsApp voice notes (OGG/AMR -> MP3).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy installed packages from builder
+COPY --from=builder /install /usr/local
+
+# Copy application source
+COPY --chown=appuser:appuser app/ ./app/
+
+# Copy Alembic migration tooling
+COPY --chown=appuser:appuser alembic.ini .
+COPY --chown=appuser:appuser migrations/ ./migrations/
+
+# Copy data maintenance scripts and bundled catalog data used for emergency
+# rebuilds of the local/vector RAG index.
+COPY --chown=appuser:appuser data/scripts/ ./data/scripts/
+COPY --chown=appuser:appuser data/skrange/ ./data/skrange/
+
+# Operational CLI (Meta WhatsApp / DB maintenance); keep image self-contained on EC2
+COPY --chown=appuser:appuser scripts/setup_company_meta_whatsapp.py ./scripts/
+COPY --chown=appuser:appuser scripts/ingest_local_data.py ./scripts/
+COPY --chown=appuser:appuser scripts/set_product_images.py ./scripts/
+COPY --chown=appuser:appuser scripts/import_product_catalog.py ./scripts/
+
+# Ensure Python can find the app package
+ENV PYTHONPATH=/app
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV HOME=/home/appuser
+
+# ────────────────────────────────────────────────────────────────────────────
+# Runtime configuration (override via environment variables or .env file)
+# ────────────────────────────────────────────────────────────────────────────
+ENV APP_ENV=production
+ENV LOG_LEVEL=INFO
+ENV APP_VERSION=0.3.0
+
+# Supabase / Postgres
+ENV DATABASE_URL=""
+
+# Weaviate
+ENV WEAVIATE_URL=""
+ENV WEAVIATE_API_KEY=""
+
+# AWS S3 (use IAM role on EC2 instead of static keys)
+ENV S3_BUCKET_NAME=""
+ENV AWS_REGION="us-east-1"
+# ENV AWS_ACCESS_KEY_ID=""
+# ENV AWS_SECRET_ACCESS_KEY=""
+
+# OpenAI
+ENV OPENAI_API_KEY=""
+ENV LLM_MODEL="gpt-4o-mini"
+
+# Security
+ENV SECRET_KEY=""
+
+USER appuser
+
+EXPOSE 8000
+
+# Health check – matches the /health endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+
+# Single worker by default — safe for small instances (~2GB RAM). Scale with replicas or override CMD.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

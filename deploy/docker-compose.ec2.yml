@@ -1,0 +1,79 @@
+# Lean EC2 stack: FastAPI API + WhatsApp worker.
+#
+# Weaviate is **not** bundled: set WEAVIATE_URL and WEAVIATE_API_KEY in ../.env
+# (Weaviate Cloud or any reachable cluster). Compose does not override them.
+#
+# WhatsApp uses Twilio; configure per-company Twilio credentials in the portal.
+# Inbound webhooks: POST /api/v1/webhooks/twilio/messages
+#
+# Run from the deploy/ directory:
+#   cd deploy && docker compose -f docker-compose.ec2.yml up -d --build
+
+services:
+  migrate:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: runtime
+    command: alembic upgrade head
+    env_file:
+      - ../.env
+    environment:
+      APP_ENV: production
+    restart: "no"
+
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: runtime
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --workers 1
+      --proxy-headers
+      --forwarded-allow-ips '*'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:8000:8000"
+    env_file:
+      - ../.env
+    environment:
+      APP_ENV: production
+      DEBUG: "false"
+    restart: unless-stopped
+    mem_limit: 512m
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 25s
+
+  whatsapp-worker:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: runtime
+    command: python -m app.workers.whatsapp_outbox_worker
+    env_file:
+      - ../.env
+    environment:
+      APP_ENV: production
+      DEBUG: "false"
+    restart: unless-stopped
+    mem_limit: 256m
+    healthcheck:
+      disable: true
+    depends_on:
+      migrate:
+        condition: service_completed_successfully

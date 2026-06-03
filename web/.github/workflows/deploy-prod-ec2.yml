@@ -1,0 +1,105 @@
+# Deploy static frontend to EC2 when pushing to branch `prod`.
+#
+# GitHub → Settings → Secrets and variables → Actions, add:
+#   EC2_HOST, EC2_USER, EC2_SSH_KEY
+#   VITE_SUPABASE_URL          Same as web/.env (Project Settings → API)
+#   VITE_SUPABASE_ANON_KEY     Same as web/.env (anon public key). If missing/wrong → login 400.
+#   VITE_API_BASE_URL          e.g. /api/mindorax when nginx proxies to FastAPI
+#   VITE_ADMIN_API_KEY         Must match API PORTAL_ADMIN_API_KEY on the server. If missing →
+#                              GET …/portal/admin/* returns 403 unless JWT has app_metadata.role=admin.
+#
+# The workflow creates DEPLOY_PATH on the server (sudo mkdir + chown to the SSH user).
+# Point nginx (or Caddy) root at that path and reload after deploy.
+
+name: Deploy frontend to EC2 (prod)
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [prod]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-prod-ec2
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      # Override in repo Settings → Variables if you use a different path.
+      DEPLOY_PATH: ${{ vars.EC2_DEPLOY_PATH || '/var/www/wa-dashboard' }}
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+      VITE_ADMIN_API_KEY: ${{ secrets.VITE_ADMIN_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Check Vite secrets (fail if Supabase env missing)
+        run: |
+          set -e
+          missing=
+          [ -z "${VITE_SUPABASE_URL:-}" ] && missing="${missing} VITE_SUPABASE_URL"
+          [ -z "${VITE_SUPABASE_ANON_KEY:-}" ] && missing="${missing} VITE_SUPABASE_ANON_KEY"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing GitHub Actions secrets:$missing — production build cannot sign in to Supabase (400 on /auth/v1/token). Copy values from web/.env."
+            exit 1
+          fi
+          if [ -z "${VITE_ADMIN_API_KEY:-}" ]; then
+            echo "::warning::VITE_ADMIN_API_KEY is empty — /portal/admin/* will 403 unless every admin user has app_metadata.role=admin in Supabase."
+          fi
+          if [ -z "${VITE_API_BASE_URL:-}" ]; then
+            echo "::warning::VITE_API_BASE_URL is empty — production uses relative /api/v1 URLs (ensure nginx proxies those paths or set /api/mindorax)."
+          fi
+
+      - name: Install and build
+        run: npm ci && npm run build
+
+      - name: Upload to EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          set -e
+          test -n "${EC2_HOST:-}" && test -n "${EC2_USER:-}" && test -n "${EC2_SSH_KEY:-}" || {
+            echo "Missing EC2_HOST, EC2_USER, or EC2_SSH_KEY secrets."
+            exit 1
+          }
+          mkdir -p ~/.ssh
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/ec2_deploy
+          chmod 600 ~/.ssh/ec2_deploy
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          SSH=(ssh -i ~/.ssh/ec2_deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new)
+          QPATH=$(printf '%q' "$DEPLOY_PATH")
+          # %q-safe path; \$(id) is literal for the remote shell to expand (not the runner).
+          "${SSH[@]}" "${EC2_USER}@${EC2_HOST}" \
+            "sudo mkdir -p ${QPATH} && sudo chown -R \$(id -un):\$(id -gn) ${QPATH}"
+          RSYNC_RSH="ssh -i ~/.ssh/ec2_deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+          rsync -avz --delete -e "$RSYNC_RSH" dist/ "${EC2_USER}@${EC2_HOST}:${DEPLOY_PATH}/"
+          # nginx runs as www-data; dirs must be o+rx and files o+r or try_files falls through to index.html (MIME errors for modules).
+          "${SSH[@]}" "${EC2_USER}@${EC2_HOST}" "sudo chmod -R a+rX ${QPATH}"
+
+      - name: Reload nginx (skip if not installed)
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          set -e
+          mkdir -p ~/.ssh
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/ec2_deploy
+          chmod 600 ~/.ssh/ec2_deploy
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          ssh -i ~/.ssh/ec2_deploy -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
+            "${EC2_USER}@${EC2_HOST}" \
+            'if command -v nginx >/dev/null 2>&1; then sudo nginx -t && sudo systemctl reload nginx; else echo "nginx not installed; skipping reload"; fi'

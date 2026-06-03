@@ -1,0 +1,110 @@
+version: "3.9"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# MindoraxAI – Local / Dev Docker Compose
+#
+# Services:
+#   api          – FastAPI application (hot-reload in dev)
+#   weaviate     – Local Weaviate vector store
+#
+# Not included (use managed cloud services):
+#   PostgreSQL   – Use Supabase or local postgres (see notes below)
+#   AWS S3       – Use LocalStack (see notes below) or real S3
+#
+# Usage:
+#   docker compose up --build
+#   docker compose up -d weaviate   # run only deps
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ─────────────────────────────────────────
+  # FastAPI Application
+  # ─────────────────────────────────────────
+  api:
+    build:
+      context: .
+      target: builder   # use builder stage for dev (includes dev deps)
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --log-level info
+    volumes:
+      - .:/app
+    working_dir: /app
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: development
+      DEBUG: "true"
+      LOG_LEVEL: INFO
+      DATABASE_URL: ${DATABASE_URL:-}   # set in .env
+      WEAVIATE_URL: http://weaviate:8080
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME:-mindorax-documents-dev}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_ENDPOINT_URL: ${AWS_ENDPOINT_URL:-}   # set to http://localstack:4566 for LocalStack
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+    depends_on:
+      weaviate:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ─────────────────────────────────────────
+  # Weaviate – Local Vector Store
+  # ─────────────────────────────────────────
+  weaviate:
+    image: semitechnologies/weaviate:1.25.0
+    ports:
+      - "8080:8080"
+      - "50051:50051"
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: /var/lib/weaviate
+      DEFAULT_VECTORIZER_MODULE: none
+      ENABLE_MODULES: ""
+      CLUSTER_HOSTNAME: weaviate-node
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/v1/.well-known/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # ─────────────────────────────────────────
+  # LocalStack (optional – for local S3)
+  # Uncomment to use LocalStack instead of real AWS S3.
+  # Set AWS_ENDPOINT_URL=http://localstack:4566 in api service.
+  # ─────────────────────────────────────────
+  # localstack:
+  #   image: localstack/localstack:3.0
+  #   ports:
+  #     - "4566:4566"
+  #   environment:
+  #     SERVICES: s3
+  #     DEFAULT_REGION: us-east-1
+  #     AWS_ACCESS_KEY_ID: test
+  #     AWS_SECRET_ACCESS_KEY: test
+  #   volumes:
+  #     - localstack_data:/var/lib/localstack
+  #   restart: unless-stopped
+
+
+volumes:
+  weaviate_data:
+  # localstack_data:

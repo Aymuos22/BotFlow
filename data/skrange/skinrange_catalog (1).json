@@ -1,0 +1,259 @@
+{
+  "brand": "SKinRange",
+  "total_products": 42,
+  "note": "Product catalog for RAG bot ingestion. Fields: product_id, category, name, description.",
+  "products": [
+    {
+      "product_id": "SKR-001",
+      "category": "Addiction & De-addiction",
+      "name": "Addiction Killer Powder",
+      "description": "An Ayurvedic herbal powder designed to support recovery from alcohol, smoking, nicotine, and drug addiction. Helps reduce cravings, detoxifies the liver and body, restores energy and appetite, and calms the mind during the recovery phase. Made with Vidarikand, Ashwagandha, Tulsi, Brahmi, and Giloy. Taken as 1 tablespoon twice daily mixed with water, juice, or food. Minimum 3-month course recommended."
+    },
+    {
+      "product_id": "SKR-002",
+      "category": "Addiction & De-addiction",
+      "name": "Addiction Killer Ark (Addiction Killer Liquid)",
+      "description": "A tasteless and colourless Ayurvedic liquid drop formulation for alcohol, smoking, and drug addiction recovery. Supports withdrawal symptom management, reduces cravings, detoxifies the liver and kidneys, and improves emotional balance. Key ingredients include Kudzu, Ashwagandha, Shatavari, Shilajit, Arjuna, and Sarpagandha. Dosage is 10–15 drops twice daily mixed with water, juice, or milk. 3-month course for best results."
+    },
+    {
+      "product_id": "SKR-003",
+      "category": "Addiction & De-addiction",
+      "name": "Nasha Free",
+      "description": "A colourless herbal liquid drop for reducing alcohol and nicotine cravings and supporting addiction recovery. Aids liver detoxification, mental clarity, digestion, and immunity. Contains Giloy, Brahmi, Bhringraj, Amla, and Ashwagandha among others. Taken as 5 drops twice daily after meals with water. Suitable for discreet use. 3-month course recommended."
+    },
+    {
+      "product_id": "SKR-004",
+      "category": "Diabetes Management",
+      "name": "Aadved Ayush 82 Tablets",
+      "description": "A CCRAS-approved Ayurvedic tablet for Type 2 diabetes and prediabetes management. Helps regulate blood sugar levels, improves insulin sensitivity, supports pancreatic beta cell health, and aids digestion. Key ingredients are Jambu Beej (Jamun Seed), Amra Beej (Mango Seed), Karavellaka (Bitter Gourd), Gurmar Leaves, and Shudh Shilajit. Dosage is 2 tablets three times daily, 30 minutes before meals. Minimum 3-month course."
+    },
+    {
+      "product_id": "SKR-005",
+      "category": "Diabetes Management",
+      "name": "Dr. Madhu Amrit Diabetes Management Kit",
+      "description": "A complete 3-in-1 holistic diabetes management kit containing Ayush 82 Tablets, Liver Support Tablets, and Neem-Karela-Jamun Juice. Addresses blood sugar regulation, insulin function, liver health, and sugar cravings together. Ayush 82: 2 tablets 3x daily before meals. Liver Support: 1–2 tablets daily. Juice: 10 ml twice daily. 3-month course recommended."
+    },
+    {
+      "product_id": "SKR-006",
+      "category": "Hair Care",
+      "name": "Aadved Adivasi Hair Oil",
+      "description": "A multi-herb Ayurvedic hair oil for reducing hair fall, dandruff, premature greying, and promoting hair growth. Strengthens roots, restores natural shine and thickness, and improves scalp health. Key ingredients include Red Onion, Bhringraj, Ashwagandha, Til Oil, Coconut Oil, Brahmi, Khas, and Manjistha. Apply to scalp at night, massage gently, leave overnight, and wash next morning. Available as a 500 ml bottle."
+    },
+    {
+      "product_id": "SKR-007",
+      "category": "Hair Care",
+      "name": "M9 Shampoo (Instant Hair Colour Shampoo)",
+      "description": "An ammonia-free instant hair colouring shampoo that restores natural black hair colour in just 5 minutes. Comes as a combo pack of Colorant Shampoo and Developer Shampoo. Contains Noni Extracts, Aloe Vera, and Olive Oil. Mix both shampoos, apply on dry hair, leave for 5 minutes, and rinse. Not recommended for daily use. Currently out of stock."
+    },
+    {
+      "product_id": "SKR-008",
+      "category": "Immunity & General Wellness",
+      "name": "Ayush Kavach (Immunity System Booster Capsules)",
+      "description": "Ayurvedic immunity booster capsules that enhance the body's natural defence against infections, boost energy and stamina, improve gut health, and support metabolism. Contains Safed Musli, Ashwagandha, Shodhit Shilajit, Dalchini, and Jaiphal. Take 1 capsule daily with water. 90-day course for best results."
+    },
+    {
+      "product_id": "SKR-009",
+      "category": "Immunity & Respiratory Health",
+      "name": "Ayush Kwath (Ayurvedic Immunity Booster Tablets)",
+      "description": "Ayurvedic immunity tablets based on the government-recommended Ayush Kwath formula. Strengthens immunity, helps fight seasonal infections, supports lung detoxification, blood purification, and improves digestion. Formulated with Tulsi, Dalchini, Sunthi (Dry Ginger), and Krishna Mirch (Black Pepper). Take 1–2 tablets twice daily with lukewarm water after meals. 2–3 month course."
+    },
+    {
+      "product_id": "SKR-010",
+      "category": "Male Sexual Wellness",
+      "name": "Ayush for Men (Ayurvedic Sexual Wellness Capsules for Men)",
+      "description": "Ayurvedic capsules for male sexual wellness supporting testosterone levels, libido, erection quality, stamina, sperm count, and fertility. Addresses erectile dysfunction (ED), low sexual desire, and hormonal imbalance. Key ingredients include Kaunch Beej, Safed Musali, Ashwagandha, Akarakara, Shodhit Shilajit, Vidari Kand, Shatavari, and Kesar. Take 1 capsule daily after dinner. Minimum 3-month course."
+    },
+    {
+      "product_id": "SKR-011",
+      "category": "Male Sexual Wellness",
+      "name": "Sandy RX",
+      "description": "A high-potency Ayurvedic and herbal capsule for men addressing low testosterone, erectile dysfunction (ED), premature ejaculation (PE), low stamina, and male fertility concerns. Contains Horny Goat Weed, Shilajit, Safed Musli, Gokshura, Kaunch Beej, Ashwagandha, Akarkara, Shatavari, Javitri, Kesar, and Mulondo. Take 2 capsules daily with lukewarm milk. 3-month course."
+    },
+    {
+      "product_id": "SKR-012",
+      "category": "Women's Health & Reproductive Support",
+      "name": "Ayush for Women",
+      "description": "Ayurvedic capsules for women's reproductive health targeting PCOS, PCOD, irregular periods, hormonal imbalance, menstrual cramps, infertility, and egg quality improvement. Key ingredients include Shatavari, Ashoka, Lodhra, Nagkesar, Arjun, Munnakka, and Sunthi. Take 1 capsule daily after dinner with water or milk. 90-day course."
+    },
+    {
+      "product_id": "SKR-013",
+      "category": "Joint & Muscle Pain",
+      "name": "Dhurandar Oil",
+      "description": "A 100% Ayurvedic vapor-action massage oil for joint stiffness, arthritis, spondylitis, sciatica, muscle pain, swelling, and injury recovery. Provides fast-acting pain relief through the natural vapor action of its herbal ingredients. Contains Nilgiri Oil, Sonth Oil, Lauvang Oil, Rogan Phosphorus, and Til Oil. Apply externally twice daily and massage in circular motions on the affected area. 3-month course available in 3, 6, and 9 bottle packs."
+    },
+    {
+      "product_id": "SKR-014",
+      "category": "Joint & Muscle Pain",
+      "name": "Ortho Veda Oil",
+      "description": "A clinically-tested, 100% plant-based Ayurvedic massage oil for joint stiffness, inflammation, knee and back pain, osteoarthritis, muscle strains, and chronic joint conditions. Strengthens joints, bones, muscles, and ligaments over time. Key ingredients include Mahanarayan Oil, Kapoor Oil, Ajowan Oil, Clove Oil, Til Oil, Eucalyptus Oil, and Menthol. Massage affected area 3–4 times daily. Available as 6 bottles of 50 ml each."
+    },
+    {
+      "product_id": "SKR-015",
+      "category": "Weight Management",
+      "name": "Aadved Slim Herbs",
+      "description": "An Ayurvedic weight management combo of capsules and massage oil for natural fat burning, metabolism boosting, appetite suppression, and cholesterol balance. Contains Green Tea, Shuddha Guggul, Amla, Vrikshamla, Harad, Arjuna, and Manjistha. Take 1 morning capsule and 1 evening capsule before meals, plus 1 capsule at 10 PM before sleep. Apply oil massage on waist for 15 minutes weekly. 3-month course."
+    },
+    {
+      "product_id": "SKR-016",
+      "category": "Kidney Health & Urinary Tract",
+      "name": "Stones Veda",
+      "description": "An Ayurvedic capsule and syrup kit for kidney stone removal, UTI relief, and urinary detoxification. Promotes natural kidney stone passage, enhances urinary flow, prevents new mineral buildup, and reduces pain and burning sensation. Contains Varun Chhal, Gokhru, Punarnava, Tulsi, Rakta Chandan, Sounf, and Mint. Take 1–2 capsules daily; syrup 1–2 spoons post dinner. 3-month course. GMP & ISO certified."
+    },
+    {
+      "product_id": "SKR-017",
+      "category": "Male Vitality & Athletic Performance",
+      "name": "Herbo 365",
+      "description": "Ayurvedic capsules for men to improve muscle mass, strength, testosterone levels, athletic performance, and sexual vitality. Also helps manage stress and hormonal imbalance. Contains Vidarikanda Extract, Kaunch Beej Extract, Shilajit Extract, Safed Musli Extract, and Ashwagandha Extract. Take 1 capsule twice daily, 30 minutes after breakfast and dinner. 3-month course."
+    },
+    {
+      "product_id": "SKR-018",
+      "category": "Weight Gain & Nutrition",
+      "name": "Poshan Plus",
+      "description": "A unisex Ayurvedic weight gainer powder for healthy weight gain, muscle mass building, energy, improved digestion, and stronger immunity. Contains Ashwagandha, Shatavari, Vidarikand, Kaunch Beej, Amla, Mulethi, Brahmi, Shankhpushpi, and Soya Milk Powder. Take 1 spoon with milk in the morning and evening. 3-month course. Available as a 480 g bottle."
+    },
+    {
+      "product_id": "SKR-019",
+      "category": "Gut Health & Digestion",
+      "name": "Vajra 44",
+      "description": "Ayurvedic capsules for gut health, digestive detox, and bowel cleansing. Relieves bloating, constipation, belching, and sluggish digestion while improving appetite, nutrient absorption, and overall immunity. Contains Safed Musli, Ashwagandha, Shatavari, Shilajit, Kesar, Triphala (Harad, Bahera, Amla), Saunf, Ajwain, and Dalchini among others. Take 2 capsules once daily with lukewarm milk or water. 3-month course."
+    },
+    {
+      "product_id": "SKR-020",
+      "category": "Energy & Athletic Performance",
+      "name": "Power Rootz Keeda Jadi (Cordyceps Militaris)",
+      "description": "A premium Himalayan Cordyceps Militaris supplement known as 'Himalayan Viagra' for boosting energy, stamina, endurance, immunity, heart and lung health, and sexual performance. Contains 100% natural Cordyceps Militaris fungus strands with no additives. Add 1 gram (5–7 strands) to 150 ml hot water, steep 3–4 minutes, and sip. Use daily for 5 days then take 1-day break. 3-month course. Currently out of stock."
+    },
+    {
+      "product_id": "SKR-021",
+      "category": "Anti-Aging & General Wellness",
+      "name": "Ayush Total Health",
+      "description": "Anti-aging Ayurvedic capsules that support healthy aging, boost immunity, improve respiratory health, and strengthen the heart, liver, lungs, and digestive system. Contains Amla, Mulethi, Guduchi, Dalchini, Ashwagandha, Methika (Fenugreek), and Sounth (Dry Ginger). Take 1 capsule per day for 90 days. Available as 60 capsules per bottle."
+    },
+    {
+      "product_id": "SKR-022",
+      "category": "Male Sexual Wellness",
+      "name": "Ultimate Hammer (Ayurvedic Night Power Booster)",
+      "description": "Ayurvedic capsules formulated to boost libido, erection strength and duration, manage premature ejaculation (PE) and erectile dysfunction (ED), improve sperm count, and enhance overall male sexual performance. Contains Kaunch Beej, Shatavari, Ashwagandha, Jaiphal, Akarkara, Gokshur, Ras Sindoor, Laung, Dalchini, and Khurasini Ajwain. Take 1 capsule daily with lukewarm milk or water. 3–6 month course."
+    },
+    {
+      "product_id": "SKR-023",
+      "category": "Male Sexual Wellness",
+      "name": "Kaama Gold Kit",
+      "description": "A comprehensive 4-in-1 Ayurvedic sexual wellness kit for men containing capsules, oil, powder, and avaleha (herbal jam). Supports testosterone levels, libido, sexual stamina, blood circulation, and overall male reproductive health. Key ingredients include Ashwagandha, Kaunch Beej, Shatavari, Gokhshura, Vidarikand, and various Ayurvedic bhasmas. Capsules: 1 at bedtime. Oil: massage on affected area. Powder: 3 g after breakfast. Avaleha: 3 g after dinner."
+    },
+    {
+      "product_id": "SKR-024",
+      "category": "Male Sexual Wellness",
+      "name": "Liv Muztang Capsules",
+      "description": "A popular Ayurvedic men's performance capsule for improving sexual performance, managing erectile dysfunction (ED) and premature ejaculation (PE), boosting libido, stamina, and testosterone levels. Contains Ashwagandha, Kaunch Beej, African Mulondo (Mondia whitei), Gokshura, and Vidarikand. Take 1–2 capsules daily, 30 minutes after a light meal or 2 hours before sleep, with lukewarm water or milk. Available in 1-month, 2-month, and 3-month packs."
+    },
+    {
+      "product_id": "SKR-025",
+      "category": "Sexual Wellness (Unisex)",
+      "name": "Liv Muztang Healthy Shots",
+      "description": "A herbal stamina tonic syrup for both men and women that boosts testosterone in men and estrogen in women, enhances sexual desire, reduces stress and fatigue, and supports energy and post-workout recovery. Contains Ashwagandha, Panax Ginseng, Safed Musli, Moringa, Lodhra, Kaunch Beej, Kesar, and Aloe Vera among others. Take 30 ml (one shot) daily, in the morning or before workouts. Available as a 1000 ml bottle."
+    },
+    {
+      "product_id": "SKR-026",
+      "category": "Respiratory Health",
+      "name": "Vayu Shuddhi",
+      "description": "Ayurvedic lung detox capsules formulated for smokers and individuals exposed to pollution. Clears airways, removes tar and mucus from lungs, improves breathing capacity and oxygen absorption, and reduces respiratory inflammation. Contains Beetroot, Vasaka Leaf, Ginger, Citrus Extracts, Arjuna Bark, Lotus Rhizome, Pushkarmool, and Black Pepper with Piperine. Take 2 capsules daily with lukewarm water. Minimum 3-month course. Available in 1, 2, and 3 month packs."
+    },
+    {
+      "product_id": "SKR-027",
+      "category": "Male Sexual Wellness",
+      "name": "Liv Muztang Plus Capsules",
+      "description": "Ayurvedic male vitality capsules for improving stamina, hormonal balance, testosterone support, sexual wellness, and confidence. Contains Kaunch Beej, Ashwagandha, Shatavari, Vidari Kand, Mulondo, Akarkara, Gokshura, Jaiphal, Laung, Dalchini, and traditional Ayurvedic bhasmas (Ras Sindoor, Bang Bhasma, Swarn Makshik Bhasma). Take 1 capsule daily at night with lukewarm milk. 3-month course."
+    },
+    {
+      "product_id": "SKR-028",
+      "category": "Weight Loss & Stress Management",
+      "name": "Power Rootz SSS Formulae",
+      "description": "A 3-in-1 Ayurvedic formula combining Slim Capsules and Sleep & Stress Tablets for sustainable weight loss, stress management, and improved sleep quality. Addresses stress-induced weight gain, poor sleep metabolism, low metabolism, and unhealthy cravings. Slim Capsules contain Green Coffee, Green Tea, Ginger, Ashwagandha, and Tej Patra. Sleep & Stress Tablets contain Shankhpushpi, Jatamansi, and Nirgundi. Slim Capsule: 1 before meals. Sleep & Stress Tablet: 1 twice daily after meals or before bedtime."
+    },
+    {
+      "product_id": "SKR-029",
+      "category": "Skin Health — Vitiligo",
+      "name": "Saumya Plus",
+      "description": "An Ayurvedic capsule and oil combination for vitiligo (Safed Daag / white skin patches). Stimulates natural melanin production, supports repigmentation, calms autoimmune skin response, and nourishes skin internally and externally. Capsule ingredients include Babchi, Bhringraj, Triphala, Kumari (Aloe Vera), and Haldi (Turmeric). Capsules: 2–3 daily at night with lukewarm water. Oil: apply 5–10 ml daily on affected areas. Minimum 3–6 month course."
+    },
+    {
+      "product_id": "SKR-030",
+      "category": "Piles & Digestive Health",
+      "name": "Dr Piles Free",
+      "description": "A complete 3-in-1 Ayurvedic kit (capsules, powder, and oil) for treatment and management of internal and external piles (hemorrhoids), anal fissures, fistula, and constipation. Reduces bleeding, pain, swelling, and itching; promotes smooth and painless bowel movements; and helps prevent recurrence. Key ingredients: Nag Keshar, Mochras, Raswat Kasis, Kutaj, and Haritaki. Powder: 3 g at night. Capsules: 1 twice daily after meals. Oil: apply on affected area. 3-month course."
+    },
+    {
+      "product_id": "SKR-031",
+      "category": "Liver Health",
+      "name": "Liver Care Capsules",
+      "description": "Ayurvedic liver detox and regeneration capsules for fatty liver management, liver inflammation, toxin accumulation from alcohol and medications, and sluggish liver function. Contains Milk Thistle Extract, Bhumi Amla, Kutki, Punarnava, Licorice, Vitamin E, Kasni (Chicory), Dandelion, Black Pepper, and Amla. Take 2 capsules daily with warm milk. 3-month course. Available as 60 capsules per bottle."
+    },
+    {
+      "product_id": "SKR-032",
+      "category": "Gut Health & Digestion",
+      "name": "SK Gut Raksha",
+      "description": "An Ayurvedic gut detox and gut health system combining a daily powder and a weekly detox shot. Addresses chronic constipation, gas, bloating, acidity, IBS, weak digestion, gut-liver imbalance, and low immunity linked to poor gut health. Key ingredients include Indrayava, Patha, Bhumi Amla, Haritaki, Triphala, Kutaja, Trikuta, Aloe Vera, and Kokum. Powder: 1 spoon (10 g) in lukewarm water every morning on empty stomach. Shot: 1 shot (5 ml) every Sunday morning."
+    },
+    {
+      "product_id": "SKR-033",
+      "category": "Immunity & Wellness",
+      "name": "Sanjeev Ras",
+      "description": "A premium Ayurvedic antioxidant juice powered by Sea Buckthorn (rich in Vitamins C & E, Omega 3, 6, 7, and 9) and Nano Curcumin for enhanced absorption. Boosts immunity, improves digestion and metabolism, supports joint and muscle comfort, and nourishes skin and hair from within. Take 30 ml twice daily mixed with warm water or juice. Available as a 500 ml bottle."
+    },
+    {
+      "product_id": "SKR-034",
+      "category": "Male Intimate Wellness",
+      "name": "Ultron XL Oil",
+      "description": "An Ayurvedic topical oil for male intimate wellness that improves blood circulation, enhances stamina and strength, supports longer performance, and reduces performance anxiety. Contains Akarkara, Til Oil, Ashwagandha, Jaivitri, and Jaiphal. For external use only. Massage gently on intimate area at night before intimacy. Available as a 50 ml bottle."
+    },
+    {
+      "product_id": "SKR-035",
+      "category": "Sexual Wellness (Unisex)",
+      "name": "Jaam-e-Ishq",
+      "description": "A classical Unani herbal prash (paste) for sexual health and fertility in both men and women. Enhances sexual performance, stamina, libido, testosterone in men and estrogen in women, sperm count and quality, and overall reproductive health. Key ingredients include Shatavari, Gokharu, Kushta-e-Nuqra, Gul-e-Surkh, HeelKalan, and Singhara. Take 3–5 grams mixed with warm milk once daily in morning or evening. Available as a 200 g bottle. 3-month course."
+    },
+    {
+      "product_id": "SKR-036",
+      "category": "Female Sexual Wellness",
+      "name": "Liv Muztang Limited Edition (Female)",
+      "description": "A specialised Ayurvedic herbal formulation for female intimate wellness. Stimulates the nervous system for enhanced sensory pleasure, increases sexual desire and arousal, promotes natural lubrication, supports estrogen production and hormonal balance, and improves overall intimate satisfaction. Contains Mulondo, Shatavari, Ashwagandha, Kaunch Beej, Akarkara, Vidari Kand, Gokshura, Ras Sindur, and Bang Bhasma processed with Amla and Mulethi kwath. Use as directed by physician. 2–3 month course."
+    },
+    {
+      "product_id": "SKR-037",
+      "category": "Sleep & Wellness",
+      "name": "Aadved Sleep",
+      "description": "Non-addictive herbal sleep support capsules that improve sleep quality, manage insomnia symptoms, regulate the sleep-wake cycle, and reduce stress and anxiety. Contains Ashwagandha root extract, Valerian root extract, Magnesium Sulphate, L-Tryptophan, and GABA. Take 1 capsule before sleep daily. Minimum 3-month course. Available in 60, 120, and 180 capsule packs."
+    },
+    {
+      "product_id": "SKR-038",
+      "category": "Male Sexual Wellness",
+      "name": "Extra Time Kit",
+      "description": "A 3-product Ayurvedic kit for improving male sexual timing, managing premature ejaculation, enhancing stamina and erection quality, and boosting confidence. Kit includes Extra Time Capsule (morning), Extra Time++ Capsule (night), and Extra Time Cream (external). Extra Time++ contains Ashwagandha, Kaunch Beej, Shatavari, Safed Musli, Jaiphal, Gokhru, and Shilajit. Cream contains Akarkara, Jaiphal, Baheda, Daruhaldi, Ashwagandha, and Laung. 3-month course."
+    },
+    {
+      "product_id": "SKR-039",
+      "category": "Male Sexual Wellness",
+      "name": "Liv Muztang REX",
+      "description": "A premium Ayurvedic performance capsule for improving male sexual stamina, erection quality, libido, reproductive health, and confidence. Contains Ashwagandha, Kaunch (Mucuna Pruriens), Gokhru, Mochras, Salab Panja, Salab Mishri, and Jal Jamani Booti. Take 1–2 capsules daily with lukewarm milk or water after meals. Minimum 2–3 month course. Available as a 30 capsule bottle."
+    },
+    {
+      "product_id": "SKR-040",
+      "category": "Energy & General Wellness",
+      "name": "SK Turbo Treats Shilajit Gummies",
+      "description": "India's first Shilajit Gummies made with Himalayan Shilajit Resin. Sugar-free with tamarind flavour. Boosts natural energy and stamina, reduces fatigue and stress, strengthens muscles and bones, supports testosterone levels, and promotes sexual wellness and healthy aging. Suitable for both men and women. Chew 1–2 gummies daily at any time — no water required. 3-month course. 60 gummies per pack. GMP & ISO certified."
+    },
+    {
+      "product_id": "SKR-041",
+      "category": "Sexual Wellness — Aromatherapy",
+      "name": "Liv Muztang Aroma Therapy",
+      "description": "A 100% natural aphrodisiac essential oil blend for enhancing libido, reducing stress-related performance issues, improving blood flow to erogenous zones, and supporting hormonal balance for both men and women. Blended with Ylang Ylang (enhances sexual energy), Lavender (reduces cortisol, relaxes nervous system), and Clary Sage (hormone-balancing). Add 8–10 drops to a diffuser with water and light 15 minutes before intimacy. For aromatherapy use only — do not ingest. GMP & ISO certified."
+    },
+    {
+      "product_id": "SKR-042",
+      "category": "Male Sexual Wellness",
+      "name": "Macamo (The Latin Lava)",
+      "description": "A Maca Root-based premium Ayurvedic capsule for men combining traditional Latin and Indian herbs for boosting libido, testosterone, fertility, stamina, and sexual performance. Contains Maca Root, Kaunch Beej, Ashwagandha, Shatavari, Gokshur, Akarkara, Jaiphal, Laung, Dalchini, and Ayurvedic Bhasmas (Bang, Swarn Makshik, Multa Shukti, Ras Singur). Take 1 capsule daily with lukewarm milk. Minimum 3-month course. Includes one free Ayurvedic doctor consultation. Available as a 30 capsule pack."
+    }
+  ]
+}

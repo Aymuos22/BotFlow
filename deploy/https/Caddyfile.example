@@ -1,0 +1,22 @@
+# Copy to /etc/caddy/Caddyfile (or use install script).
+#
+# --- No paid domain? Use nip.io (free) ---
+# If your public IP is 54.252.233.98, use hostname:
+#   54.252.233.98.nip.io
+# (nip.io DNS resolves that name to that IP; Caddy + Let's Encrypt work.)
+# Install: sudo PUBLIC_IP=54.252.233.98 bash deploy/https/install-caddy-nip.sh
+#
+# --- Or use your own domain ---
+# DNS A record: YOUR_DOMAIN -> EC2 public IP
+# Security group: TCP 80, 443 (and 22 for SSH)
+#
+# API must listen on 127.0.0.1:8000 (docker-compose.ec2.yml).
+#
+# Twilio webhook:
+#   https://<hostname>/api/v1/webhooks/twilio/messages
+#
+# After editing: sudo systemctl reload caddy
+
+YOUR_DOMAIN {
+	reverse_proxy 127.0.0.1:8000
+}
