@@ -82,12 +82,13 @@ export default function Login({ onPortalLogin }: Props) {
       </div>
       <div className="auth-card stack">
         <div className="auth-brand">
-          <svg viewBox="0 0 36 32" fill="none" aria-hidden style={{ width: 40, height: 36, color: "var(--accent, #6366f1)" }}>
-            <rect x="1" y="1" width="34" height="24" rx="6" stroke="currentColor" strokeWidth="2" opacity="0.8" />
-            <circle cx="10" cy="13" r="2.5" fill="currentColor" />
-            <circle cx="18" cy="13" r="2.5" fill="currentColor" />
-            <circle cx="26" cy="13" r="2.5" fill="currentColor" />
-            <path d="M11 25 L14 31 L17 25" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="none" />
+          <svg viewBox="0 0 40 40" fill="none" aria-hidden style={{ width: 44, height: 44, color: "var(--accent, #6366f1)" }}>
+            <rect width="40" height="40" rx="10" fill="currentColor" />
+            <rect x="7" y="9" width="26" height="17" rx="4" fill="white" fillOpacity="0.95" />
+            <circle cx="14" cy="17.5" r="2" fill="currentColor" />
+            <circle cx="20" cy="17.5" r="2" fill="currentColor" />
+            <circle cx="26" cy="17.5" r="2" fill="currentColor" />
+            <path d="M14 26 L18 31 L22 26" fill="white" fillOpacity="0.95" />
           </svg>
           <div>
             <strong>BotFlow</strong>

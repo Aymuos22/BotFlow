@@ -20,12 +20,17 @@ export type SidebarLink = {
 };
 
 const BotFlowIcon = () => (
-  <svg className="sidebar__brand-icon" viewBox="0 0 36 32" fill="none" aria-hidden>
-    <rect x="1" y="1" width="34" height="24" rx="6" stroke="currentColor" strokeWidth="2" opacity="0.8" />
-    <circle cx="10" cy="13" r="2.5" fill="currentColor" />
-    <circle cx="18" cy="13" r="2.5" fill="currentColor" />
-    <circle cx="26" cy="13" r="2.5" fill="currentColor" />
-    <path d="M11 25 L14 31 L17 25" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="none" />
+  <svg className="sidebar__brand-icon" viewBox="0 0 40 40" fill="none" aria-hidden>
+    {/* Filled rounded square background */}
+    <rect width="40" height="40" rx="10" fill="currentColor" />
+    {/* White chat bubble */}
+    <rect x="7" y="9" width="26" height="17" rx="4" fill="white" fillOpacity="0.95" />
+    {/* Three dots */}
+    <circle cx="14" cy="17.5" r="2" fill="currentColor" />
+    <circle cx="20" cy="17.5" r="2" fill="currentColor" />
+    <circle cx="26" cy="17.5" r="2" fill="currentColor" />
+    {/* Tail */}
+    <path d="M14 26 L18 31 L22 26" fill="white" fillOpacity="0.95" />
   </svg>
 );
 
