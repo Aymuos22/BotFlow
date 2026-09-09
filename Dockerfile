@@ -43,16 +43,8 @@ COPY --chown=appuser:appuser app/ ./app/
 COPY --chown=appuser:appuser alembic.ini .
 COPY --chown=appuser:appuser migrations/ ./migrations/
 
-# Copy data maintenance scripts and bundled catalog data used for emergency
-# rebuilds of the local/vector RAG index.
-COPY --chown=appuser:appuser data/scripts/ ./data/scripts/
-COPY --chown=appuser:appuser data/skrange/ ./data/skrange/
-
-# Operational CLI (Meta WhatsApp / DB maintenance); keep image self-contained on EC2
-COPY --chown=appuser:appuser scripts/setup_company_meta_whatsapp.py ./scripts/
-COPY --chown=appuser:appuser scripts/ingest_local_data.py ./scripts/
-COPY --chown=appuser:appuser scripts/set_product_images.py ./scripts/
-COPY --chown=appuser:appuser scripts/import_product_catalog.py ./scripts/
+# Operational CLI scripts (optional — only copied if they exist)
+COPY --chown=appuser:appuser scripts/ ./scripts/
 
 # Ensure Python can find the app package
 ENV PYTHONPATH=/app
