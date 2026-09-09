@@ -138,6 +138,26 @@ services:
       - key: CORS_ORIGINS
         sync: false
 
+  # ── Frontend (React/Vite static site) ─────────────────────────────────────
+  - type: static
+    name: botflow-web
+    buildCommand: cd web && npm install && npm run build
+    staticPublishPath: ./web/dist
+    plan: free
+    envVars:
+      # MUST match backend SUPABASE_URL project
+      - key: VITE_SUPABASE_URL
+        sync: false
+      # Supabase Dashboard → Project Settings → API → anon / public key
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      # Points directly at the backend API service
+      - key: VITE_API_BASE_URL
+        value: https://botflow-api.onrender.com
+      # Must match backend PORTAL_ADMIN_API_KEY
+      - key: VITE_ADMIN_API_KEY
+        sync: false
+
   # ── Keep-alive cron (prevents free tier from sleeping) ──────────────────────
   # Pings /health every 5 minutes — free on Render (cron jobs have no plan cost).
   # !! Replace YOUR_APP_URL with your actual Render web service URL !!

@@ -3,8 +3,6 @@ import { supabase } from "../lib/supabase";
 import { portalLogin, type PortalLoginResponse } from "../lib/api";
 import { useToast } from "../context/ToastContext";
 import ThemeToggle from "../components/ThemeToggle";
-import brandLogo from "../../logo/logo.jpeg";
-
 type Props = {
   onPortalLogin: (session: PortalLoginResponse) => void;
 };
@@ -84,9 +82,15 @@ export default function Login({ onPortalLogin }: Props) {
       </div>
       <div className="auth-card stack">
         <div className="auth-brand">
-          <img src={brandLogo} alt="MindoraXai" />
+          <svg viewBox="0 0 36 32" fill="none" aria-hidden style={{ width: 40, height: 36, color: "var(--accent, #6366f1)" }}>
+            <rect x="1" y="1" width="34" height="24" rx="6" stroke="currentColor" strokeWidth="2" opacity="0.8" />
+            <circle cx="10" cy="13" r="2.5" fill="currentColor" />
+            <circle cx="18" cy="13" r="2.5" fill="currentColor" />
+            <circle cx="26" cy="13" r="2.5" fill="currentColor" />
+            <path d="M11 25 L14 31 L17 25" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="none" />
+          </svg>
           <div>
-            <strong>MindoraXai</strong>
+            <strong>BotFlow</strong>
             <span>Admin Portal</span>
           </div>
         </div>

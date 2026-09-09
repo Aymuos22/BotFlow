@@ -19,9 +19,18 @@ export type SidebarLink = {
   externalHref?: string;
 };
 
+const BotFlowIcon = () => (
+  <svg className="sidebar__brand-icon" viewBox="0 0 36 32" fill="none" aria-hidden>
+    <rect x="1" y="1" width="34" height="24" rx="6" stroke="currentColor" strokeWidth="2" opacity="0.8" />
+    <circle cx="10" cy="13" r="2.5" fill="currentColor" />
+    <circle cx="18" cy="13" r="2.5" fill="currentColor" />
+    <circle cx="26" cy="13" r="2.5" fill="currentColor" />
+    <path d="M11 25 L14 31 L17 25" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="none" />
+  </svg>
+);
+
 type Props = {
   links: SidebarLink[];
-  logoSrc: string;
   collapsed: boolean;
   mobileOpen: boolean;
   onToggleCollapse: () => void;
@@ -30,7 +39,6 @@ type Props = {
 
 export default function Sidebar({
   links,
-  logoSrc,
   collapsed,
   mobileOpen,
   onToggleCollapse,
@@ -40,9 +48,9 @@ export default function Sidebar({
     <>
       <aside className={`sidebar ${collapsed ? "sidebar--collapsed" : ""} ${mobileOpen ? "sidebar--mobile-open" : ""}`}>
         <div className="sidebar__brand">
-          <img src={logoSrc} alt="MindoraXai" />
+          <BotFlowIcon />
           <div>
-            <strong>MindoraXai</strong>
+            <strong>BotFlow</strong>
             <span>Chatbot Engine</span>
           </div>
         </div>

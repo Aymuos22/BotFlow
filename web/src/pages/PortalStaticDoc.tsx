@@ -14,7 +14,7 @@ const LEGAL_PAGES: Record<string, DocBlock> = {
       {
         heading: "What we process",
         body: [
-          "MindoraXai Cloud processes messages, channel metadata, and configuration you submit so we can operate your assistant, inbox, and optional integrations (such as spreadsheets or WhatsApp templates).",
+          "BotFlow processes messages, channel metadata, and configuration you submit so we can operate your assistant, inbox, and optional integrations (such as spreadsheets or WhatsApp templates).",
           "We minimise retention to what’s needed for support, debugging, analytics you enable, and legal obligations.",
         ],
       },

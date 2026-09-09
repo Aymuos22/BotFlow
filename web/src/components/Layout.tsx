@@ -7,7 +7,6 @@ import Sidebar, { type SidebarLink } from "./Sidebar";
 type Props = {
   children: React.ReactNode;
   links: SidebarLink[];
-  logoSrc: string;
   userLabel: string;
   role: "admin" | "user";
   onLogout: () => void;
@@ -16,7 +15,6 @@ type Props = {
 export default function Layout({
   children,
   links,
-  logoSrc,
   userLabel,
   role,
   onLogout,
@@ -28,7 +26,6 @@ export default function Layout({
     <div className={`dashboard-layout ${collapsed ? "dashboard-layout--collapsed" : ""}`}>
       <Sidebar
         links={links}
-        logoSrc={logoSrc}
         collapsed={collapsed}
         mobileOpen={mobileOpen}
         onToggleCollapse={() => setCollapsed((v) => !v)}

@@ -12,11 +12,11 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
 ) {
-  const origin = process.env.MINDORAX_API_ORIGIN?.replace(/\/$/, "");
+  const origin = process.env.BOTFLOW_API_ORIGIN?.replace(/\/$/, "");
   if (!origin) {
     res
       .status(502)
-      .json({ error: "MINDORAX_API_ORIGIN is not set (Vercel env, server-only)" });
+      .json({ error: "BOTFLOW_API_ORIGIN is not set (Vercel env, server-only)" });
     return;
   }
 

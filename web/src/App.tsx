@@ -20,9 +20,8 @@ import CompanyCampaigns from "./pages/CompanyCampaigns";
 import PortalStaticDoc from "./pages/PortalStaticDoc";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import { ToastProvider, useToast } from "./context/ToastContext";
-import brandLogo from "../logo/logo.jpeg";
 
-const PORTAL_SESSION_KEY = "mindorax.portalSession";
+const PORTAL_SESSION_KEY = "botflow.portalSession";
 
 type AuthUser = Pick<User, "app_metadata">;
 
@@ -299,25 +298,25 @@ const helpNav: SidebarLink[] = [
     to: "__ext/discord__",
     label: "Discord Community",
     icon: globeIcon,
-    externalHref: "https://discord.gg/mindoraxai",
+    externalHref: "https://discord.gg/botflow",
   },
   {
     to: "__ext/docs__",
     label: "Documentation",
     icon: bookIcon,
-    externalHref: "https://docs.mindoraxai.com",
+    externalHref: "https://docs.botflow.ai",
   },
   {
     to: "__ext/versity__",
-    label: "Mindorax Versity",
+    label: "BotFlow Academy",
     icon: accessibilityIcon,
-    externalHref: "https://versity.mindoraxai.com",
+    externalHref: "https://botflow.ai",
   },
   {
     to: "__ext/partner__",
     label: "Hire a Partner",
     icon: mailIcon,
-    externalHref: "mailto:partners@mindoraxai.com?subject=Partner%20inquiry",
+    externalHref: "mailto:partners@botflow.ai?subject=Partner%20inquiry",
   },
 ];
 
@@ -505,7 +504,6 @@ function Shell() {
   return (
     <Layout
       links={links}
-      logoSrc={brandLogo}
       userLabel={userLabel(user)}
       role={role}
       onLogout={logout}
@@ -611,12 +609,12 @@ function Shell() {
         <Route path="/operations/batch-calling" element={<PlaceholderPage title="Batch Calling" description="Send bulk WhatsApp calls to your audience. Coming up shortly." />} />
         <Route path="/operations/audience" element={<PlaceholderPage title="Audience Manager" description="Segment and manage your contact audiences here." />} />
         {/* Developers */}
-        <Route path="/developer/api-key" element={<PlaceholderPage title="API Key" description="Manage your API keys for programmatic access to MindoraXai." />} />
+        <Route path="/developer/api-key" element={<PlaceholderPage title="API Key" description="Manage your API keys for programmatic access to BotFlow." />} />
         <Route path="/developer/webhooks" element={<PlaceholderPage title="Webhooks" description="Configure inbound and outbound webhook endpoints." />} />
         <Route path="/developer/logs" element={<PlaceholderPage title="Logs" description="Live request and event logs for your integration." />} />
         <Route path="/developer/code-mode" element={<PlaceholderPage title="Code Mode" description="Write and test custom bot logic with full code access." />} />
         {/* Billing */}
-        <Route path="/billing" element={<PlaceholderPage title="Current Plan" description="View and manage your MindoraXai subscription and usage." />} />
+        <Route path="/billing" element={<PlaceholderPage title="Current Plan" description="View and manage your BotFlow subscription and usage." />} />
         <Route path="/legal/:doc" element={<PortalStaticDoc variant="legal" />} />
         <Route path="/help" element={<PortalStaticDoc variant="help" />} />
         <Route path="/login" element={<Navigate to="/dashboard" replace />} />

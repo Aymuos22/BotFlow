@@ -1,7 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import ThemeToggle from "../components/ThemeToggle";
-import brandLogo from "../../logo/logo.jpeg";
-
 export default function LandingPage() {
   const navigate = useNavigate();
 
@@ -11,8 +9,14 @@ export default function LandingPage() {
       <header className="landing-nav">
         <div className="landing-nav__inner">
           <div className="landing-nav__brand">
-            <img src={brandLogo} alt="MindoraXai logo" className="landing-nav__logo" />
-            <span className="landing-nav__name">MindoraXai</span>
+            <svg viewBox="0 0 36 32" fill="none" aria-hidden className="landing-nav__logo" style={{ color: "var(--accent, #6366f1)" }}>
+              <rect x="1" y="1" width="34" height="24" rx="6" stroke="currentColor" strokeWidth="2" opacity="0.8" />
+              <circle cx="10" cy="13" r="2.5" fill="currentColor" />
+              <circle cx="18" cy="13" r="2.5" fill="currentColor" />
+              <circle cx="26" cy="13" r="2.5" fill="currentColor" />
+              <path d="M11 25 L14 31 L17 25" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="none" />
+            </svg>
+            <span className="landing-nav__name">BotFlow</span>
           </div>
           <nav className="landing-nav__links">
             <a href="#features">Features</a>
@@ -39,7 +43,7 @@ export default function LandingPage() {
             into a <span className="landing-accent">customer</span>
           </h1>
           <p className="landing-hero__sub">
-            MindoraXai brings intelligent AI agents, lead management, WhatsApp
+            BotFlow brings intelligent AI agents, lead management, WhatsApp
             campaigns, and real-time analytics into one unified portal — built
             for teams that move fast.
           </p>
@@ -63,7 +67,7 @@ export default function LandingPage() {
               <span className="landing-preview-dot landing-preview-dot--red" />
               <span className="landing-preview-dot landing-preview-dot--yellow" />
               <span className="landing-preview-dot landing-preview-dot--green" />
-              <span className="landing-preview-card__title">MindoraXai Portal</span>
+              <span className="landing-preview-card__title">BotFlow Portal</span>
             </div>
             <div className="landing-preview-card__body">
               <div className="landing-stat-row">
@@ -156,11 +160,17 @@ export default function LandingPage() {
       <footer className="landing-footer">
         <div className="landing-footer__inner">
           <div className="landing-footer__brand">
-            <img src={brandLogo} alt="MindoraXai" className="landing-nav__logo" />
-            <span>MindoraXai</span>
+            <svg viewBox="0 0 36 32" fill="none" aria-hidden className="landing-nav__logo" style={{ color: "var(--accent, #6366f1)" }}>
+              <rect x="1" y="1" width="34" height="24" rx="6" stroke="currentColor" strokeWidth="2" opacity="0.8" />
+              <circle cx="10" cy="13" r="2.5" fill="currentColor" />
+              <circle cx="18" cy="13" r="2.5" fill="currentColor" />
+              <circle cx="26" cy="13" r="2.5" fill="currentColor" />
+              <path d="M11 25 L14 31 L17 25" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" fill="none" />
+            </svg>
+            <span>BotFlow</span>
           </div>
           <p className="landing-footer__copy">
-            &copy; {new Date().getFullYear()} MindoraXai. All rights reserved.
+            &copy; {new Date().getFullYear()} BotFlow. All rights reserved.
           </p>
           <div className="landing-footer__links">
             <a href="/legal/privacy">Privacy</a>

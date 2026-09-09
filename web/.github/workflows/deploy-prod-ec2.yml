@@ -4,7 +4,7 @@
 #   EC2_HOST, EC2_USER, EC2_SSH_KEY
 #   VITE_SUPABASE_URL          Same as web/.env (Project Settings → API)
 #   VITE_SUPABASE_ANON_KEY     Same as web/.env (anon public key). If missing/wrong → login 400.
-#   VITE_API_BASE_URL          e.g. /api/mindorax when nginx proxies to FastAPI
+#   VITE_API_BASE_URL          e.g. /api/botflow when nginx proxies to FastAPI, or https://botflow-api.onrender.com for direct
 #   VITE_ADMIN_API_KEY         Must match API PORTAL_ADMIN_API_KEY on the server. If missing →
 #                              GET …/portal/admin/* returns 403 unless JWT has app_metadata.role=admin.
 #
@@ -58,7 +58,7 @@ jobs:
             echo "::warning::VITE_ADMIN_API_KEY is empty — /portal/admin/* will 403 unless every admin user has app_metadata.role=admin in Supabase."
           fi
           if [ -z "${VITE_API_BASE_URL:-}" ]; then
-            echo "::warning::VITE_API_BASE_URL is empty — production uses relative /api/v1 URLs (ensure nginx proxies those paths or set /api/mindorax)."
+            echo "::warning::VITE_API_BASE_URL is empty — production uses relative /api/v1 URLs (ensure nginx proxies those paths or set /api/botflow)."
           fi
 
       - name: Install and build

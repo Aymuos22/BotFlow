@@ -4,8 +4,8 @@
  * - **Production / preview:** usually `""` so requests are same-origin (nginx / Vercel proxy).
  * - **Local dev:** defaults to `http://127.0.0.1:8000` (direct to uvicorn). The API allows
  *   `http://localhost:5173` in CORS when `APP_ENV` is not `production`. This avoids flaky
- *   Vite proxy 404s on `GET /api/mindorax/api/v1/...`.
- * - Override with `VITE_API_BASE_URL` (e.g. `/api/mindorax` to force the Vite proxy).
+ *   Vite proxy 404s on `GET /api/botflow/api/v1/...`.
+ * - Override with `VITE_API_BASE_URL` (e.g. `/api/botflow` to force the Vite proxy).
  */
 export function apiBase(): string {
   const raw = (import.meta.env.VITE_API_BASE_URL ?? "").trim();
