@@ -1,0 +1,48 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# ── Env / secrets ─────────────────────────────────────────────────────────────
+.env
+.env.*
+secrets/
+
+# ── Virtual envs ──────────────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── Frontend (not needed in backend Docker image) ─────────────────────────────
+web/
+node_modules/
+
+# ── Git ───────────────────────────────────────────────────────────────────────
+.git/
+.gitignore
+.gitattributes
+
+# ── Editor / OS ───────────────────────────────────────────────────────────────
+.cursor/
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
+# ── Docs / CI not needed in image ─────────────────────────────────────────────
+*.md
+.github/
+docs/
+
+# ── Test / dev artefacts ──────────────────────────────────────────────────────
+app/tests/
+requirements-dev.txt
+
+# ── Render / Docker meta ──────────────────────────────────────────────────────
+render.yaml
+docker-compose.yml

@@ -43,8 +43,11 @@ COPY --chown=appuser:appuser app/ ./app/
 COPY --chown=appuser:appuser alembic.ini .
 COPY --chown=appuser:appuser migrations/ ./migrations/
 
-# Operational CLI scripts (optional — only copied if they exist)
+# Operational CLI scripts
 COPY --chown=appuser:appuser scripts/ ./scripts/
+
+# Ensure data dir exists for any runtime file drops
+RUN mkdir -p ./data
 
 # Ensure Python can find the app package
 ENV PYTHONPATH=/app
