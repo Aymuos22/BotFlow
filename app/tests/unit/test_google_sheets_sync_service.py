@@ -120,7 +120,7 @@ async def test_google_sheets_sync_creates_sheet_and_writes_message(
     config = await CompanyConfigRepository(db_session).get_by_company(sample_company_id)
     assert config is not None
     assert config.google_sheet_id == "sheet123"
-    assert fake.created_titles == ["Test Company - Mindorax Live Inbox"]
+    assert fake.created_titles == ["Test Company - BotFlow Live Inbox"]
     assert ("sheet123", "Leads!A:D") == fake.appended[0][:2]
     assert fake.appended[0][2][0] == [
         "+919999999999",

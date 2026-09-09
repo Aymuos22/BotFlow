@@ -6,8 +6,6 @@ import logging
 import os
 import subprocess
 import tempfile
-import asyncio
-from functools import lru_cache
 from dataclasses import dataclass
 from typing import Optional
 
@@ -103,9 +101,17 @@ async def download_meta_audio(
 
 
 async def transcribe_audio(audio: DownloadedAudio, *, language: Optional[str] = None) -> str:
+    """
+    Transcribe audio using available cloud providers.
+
+    Priority:
+      1. OpenAI Whisper API (when OPENAI_API_KEY is set)
+      2. Groq Whisper API  (when GROQ_API_KEY is set)
+    """
     errors: list[str] = []
     prepared = _prepare_openai_audio(audio)
 
+    # ── 1. OpenAI Whisper ────────────────────────────────────────────────────
     if settings.openai_api_key:
         from openai import AsyncOpenAI
 
@@ -113,10 +119,7 @@ async def transcribe_audio(audio: DownloadedAudio, *, language: Optional[str] = 
         for model in _transcription_models():
             file_obj = io.BytesIO(prepared.content)
             file_obj.name = prepared.filename
-            kwargs = {
-                "model": model,
-                "file": file_obj,
-            }
+            kwargs: dict = {"model": model, "file": file_obj}
             if language:
                 kwargs["language"] = language
             try:
@@ -140,74 +143,58 @@ async def transcribe_audio(audio: DownloadedAudio, *, language: Optional[str] = 
                 )
                 return transcript
             except Exception as exc:
-                errors.append(f"{model}: {exc}")
+                errors.append(f"openai/{model}: {exc}")
                 logger.warning(
-                    "Audio transcription model failed",
-                    extra={"provider": "openai", "model": model, "error": str(exc)},
+                    "OpenAI audio transcription failed",
+                    extra={"model": model, "error": str(exc)},
                 )
     else:
         errors.append("openai: OPENAI_API_KEY not configured")
 
-    if settings.whatsapp_audio_local_fallback_enabled:
-        try:
-            return await asyncio.to_thread(_transcribe_audio_local, prepared, language)
-        except Exception as exc:
-            errors.append(f"local-faster-whisper: {exc}")
-            logger.warning(
-                "Local audio transcription failed",
-                extra={"model": settings.whatsapp_audio_local_model, "error": str(exc)},
-            )
+    # ── 2. Groq Whisper ──────────────────────────────────────────────────────
+    if settings.groq_api_key:
+        from groq import AsyncGroq
 
-    raise RuntimeError("All audio transcription models failed: " + " | ".join(errors))
-
-
-@lru_cache(maxsize=4)
-def _local_whisper_model(model_name: str, compute_type: str):
-    from faster_whisper import WhisperModel
-
-    return WhisperModel(
-        model_name,
-        device="cpu",
-        compute_type=compute_type,
-        download_root="/tmp/faster-whisper-models",
-    )
-
-
-def _transcribe_audio_local(audio: DownloadedAudio, language: Optional[str] = None) -> str:
-    suffix = os.path.splitext(audio.filename or "")[1] or ".mp3"
-    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as src:
-        src.write(audio.content)
-        src_path = src.name
-    try:
-        model_name = (settings.whatsapp_audio_local_model or "base").strip()
-        compute_type = (settings.whatsapp_audio_local_compute_type or "int8").strip()
-        model = _local_whisper_model(model_name, compute_type)
-        segments, info = model.transcribe(
-            src_path,
-            language=language,
-            beam_size=1,
-            vad_filter=False,
+        groq_client = AsyncGroq(
+            api_key=settings.groq_api_key,
+            timeout=settings.llm_timeout_seconds,
         )
-        transcript = " ".join(seg.text.strip() for seg in segments if seg.text and seg.text.strip()).strip()
-        if not transcript:
-            raise RuntimeError("Local audio transcription returned empty text.")
-        logger.info(
-            "WhatsApp audio transcribed",
-            extra={
-                "provider": "faster-whisper",
-                "model": model_name,
-                "compute_type": compute_type,
-                "language": getattr(info, "language", None),
-                "language_probability": getattr(info, "language_probability", None),
-                "bytes": len(audio.content),
-            },
-        )
-        return transcript
-    finally:
-        try:
-            os.unlink(src_path)
-        except FileNotFoundError:
-            pass
+        for model in _groq_transcription_models():
+            file_obj = io.BytesIO(prepared.content)
+            file_obj.name = prepared.filename
+            kwargs = {"model": model, "file": (prepared.filename, file_obj)}
+            if language:
+                kwargs["language"] = language
+            try:
+                result = await groq_client.audio.transcriptions.create(**kwargs)
+                text = getattr(result, "text", None)
+                if text is None and isinstance(result, dict):
+                    text = result.get("text")
+                transcript = str(text or "").strip()
+                if not transcript:
+                    raise RuntimeError("Audio transcription returned empty text.")
+                logger.info(
+                    "WhatsApp audio transcribed",
+                    extra={
+                        "provider": "groq",
+                        "content_type": audio.content_type,
+                        "prepared_content_type": prepared.content_type,
+                        "bytes": len(audio.content),
+                        "prepared_bytes": len(prepared.content),
+                        "model": model,
+                    },
+                )
+                return transcript
+            except Exception as exc:
+                errors.append(f"groq/{model}: {exc}")
+                logger.warning(
+                    "Groq audio transcription failed",
+                    extra={"model": model, "error": str(exc)},
+                )
+    else:
+        errors.append("groq: GROQ_API_KEY not configured")
+
+    raise RuntimeError("All audio transcription providers failed: " + " | ".join(errors))
 
 
 def _validate_size(content: bytes) -> None:
@@ -217,6 +204,7 @@ def _validate_size(content: bytes) -> None:
 
 
 def _transcription_models() -> list[str]:
+    """OpenAI Whisper model candidates (tried in order)."""
     configured = (settings.whatsapp_audio_transcription_model or "").strip()
     candidates = [
         configured,
@@ -235,6 +223,15 @@ def _transcription_models() -> list[str]:
         seen.add(key)
         out.append(model)
     return out
+
+
+def _groq_transcription_models() -> list[str]:
+    """Groq Whisper model candidates (tried in order)."""
+    return [
+        "whisper-large-v3-turbo",
+        "whisper-large-v3",
+        "distil-whisper-large-v3-en",
+    ]
 
 
 def _prepare_openai_audio(audio: DownloadedAudio) -> DownloadedAudio:

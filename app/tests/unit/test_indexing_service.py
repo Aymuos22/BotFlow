@@ -77,7 +77,7 @@ def mock_config_repo():
 
 @pytest.fixture
 def mock_storage():
-    # S3StorageClient is synchronous (boto3-backed), use MagicMock
+    # SupabaseStorageClient is synchronous (supabase-py backed), use MagicMock
     return MagicMock()
 
 

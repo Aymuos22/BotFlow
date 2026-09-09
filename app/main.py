@@ -72,8 +72,8 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.app_name,
         description=(
-            "Multi-tenant WhatsApp RAG SaaS backend. "
-            "Phases 1-3: Company onboarding, document management, "
+            "BotFlow — Multi-tenant WhatsApp AI chatbot engine. "
+            "Company onboarding, document management, "
             "RAG-powered WhatsApp bot, human handoff, and analytics."
         ),
         version=settings.app_version,
@@ -82,8 +82,7 @@ def create_app() -> FastAPI:
         redoc_url="/redoc" if not settings.is_production else None,
         openapi_url="/openapi.json" if not settings.is_production else None,
         contact={
-            "name": "MindoraxAI",
-            "url": "https://mindorax.ai",
+            "name": "BotFlow",
         },
     )
 

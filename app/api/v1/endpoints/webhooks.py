@@ -29,13 +29,17 @@ Design rules
    acknowledged but not replied to (text-only support).
 """
 import asyncio
+import hashlib
+import hmac as _hmac
 import json
 import logging
 import re
+from collections import deque
 from datetime import datetime, timezone
 from typing import Awaitable, Callable, List, Optional
+from uuid import UUID
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Form, Header, Query, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, Header, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -1187,3 +1191,199 @@ def _twilio_number_to_e164(number: str) -> str:
     if not number.startswith("+"):
         number = f"+{number}"
     return number
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# BOTFLOW post-call webhook
+# POST /api/v1/webhooks/BOTFLOW/{company_id}
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Bounded in-memory idempotency store: prevents duplicate sends when
+# BOTFLOW retries a webhook that already received 200 from us.
+_BOTFLOW_SEEN: deque[str] = deque(maxlen=1_000)
+_BOTFLOW_SEEN_SET: set[str] = set()
+
+
+def _BOTFLOW_mark_seen(call_id: str) -> bool:
+    """Return True if call_id was already processed (duplicate). Otherwise register it."""
+    if call_id in _BOTFLOW_SEEN_SET:
+        return True
+    if len(_BOTFLOW_SEEN) == _BOTFLOW_SEEN.maxlen:
+        # deque is full — evict the oldest entry from the set too
+        _BOTFLOW_SEEN_SET.discard(_BOTFLOW_SEEN[0])
+    _BOTFLOW_SEEN.append(call_id)
+    _BOTFLOW_SEEN_SET.add(call_id)
+    return False
+
+
+async def _process_BOTFLOW_event(
+    company_id: UUID,
+    call_id: str,
+    data: dict,
+    weaviate_client: WeaviateClient,
+    llm_client: LLMClientProtocol,
+) -> None:
+    """
+    Background task: look up the product in this company's Weaviate collection
+    using RAG and send the result as a WhatsApp message to the caller.
+
+    Runs after the endpoint has already returned 200 to BOTFLOW.
+    """
+    if _BOTFLOW_mark_seen(call_id):
+        logger.info(
+            "BOTFLOW duplicate call_id — skipped",
+            extra={"call_id": call_id},
+        )
+        return
+
+    entities = data.get("entities") or {}
+    if entities.get("product_details_requested") != "yes":
+        logger.info(
+            "BOTFLOW event skipped — product_details_requested != yes",
+            extra={"call_id": call_id, "entities": entities},
+        )
+        return
+
+    phone_number = (data.get("phone_number") or "").strip()
+    product_name = (entities.get("product_name") or "").strip()
+
+    if not phone_number:
+        logger.warning(
+            "BOTFLOW webhook missing phone_number — cannot send WhatsApp",
+            extra={"call_id": call_id, "company_id": str(company_id)},
+        )
+        return
+
+    from app.core.database import AsyncSessionLocal
+    from app.services.whatsapp_outbound import (
+        company_can_send_whatsapp,
+        send_company_whatsapp_text,
+    )
+
+    try:
+        async with AsyncSessionLocal() as db:
+            config = await CompanyConfigRepository(db).get_by_company(company_id)
+            if not config:
+                logger.warning(
+                    "BOTFLOW: no CompanyConfig found",
+                    extra={"company_id": str(company_id), "call_id": call_id},
+                )
+                return
+            if not company_can_send_whatsapp(config):
+                logger.warning(
+                    "BOTFLOW: company WhatsApp not configured",
+                    extra={"company_id": str(company_id), "call_id": call_id},
+                )
+                return
+
+            # Build the RAG query from the product the caller asked about.
+            # Fall back to the transcript excerpt when no product name was extracted.
+            if product_name:
+                query = product_name
+            else:
+                transcript = (data.get("transcript") or "").strip()
+                query = transcript[:500] if transcript else "product details"
+
+            rag_svc = _build_rag_service(db, weaviate_client, llm_client)
+            rag_result = await rag_svc.process_query(
+                company_id=company_id,
+                query=query,
+            )
+            message = (rag_result.get("answer") or "").strip()
+            if not message:
+                logger.warning(
+                    "BOTFLOW: RAG returned empty answer — WhatsApp not sent",
+                    extra={"call_id": call_id, "query": query},
+                )
+                return
+
+            await send_company_whatsapp_text(
+                config=config,
+                to_number=phone_number,
+                text=message,
+            )
+            logger.info(
+                "BOTFLOW WhatsApp sent",
+                extra={
+                    "call_id": call_id,
+                    "company_id": str(company_id),
+                    "to": phone_number,
+                    "product": product_name or "(from transcript)",
+                },
+            )
+    except Exception:
+        logger.exception(
+            "BOTFLOW background task failed",
+            extra={"call_id": call_id, "company_id": str(company_id)},
+        )
+
+
+@router.post(
+    "/BOTFLOW/{company_id}",
+    status_code=200,
+    summary="BOTFLOW post-call webhook",
+    tags=["webhooks"],
+)
+async def BOTFLOW_webhook(
+    company_id: UUID,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    weaviate_client: WeaviateClient = Depends(get_weaviate_client),
+    llm_client: LLMClientProtocol = Depends(get_llm_client),
+) -> dict:
+    """
+    Receive ``call_postprocessing`` events from BOTFLOW.
+
+    Flow
+    ----
+    1. Verify ``X-Webhook-Signature: sha256=<hmac>`` using ``BOTFLOW_WEBHOOK_SECRET``.
+    2. Return ``{"status": "accepted"}`` immediately (BOTFLOW expects < 10 s).
+    3. Background task:
+       a. Idempotency check on ``call_id``.
+       b. Skip if ``entities.product_details_requested != "yes"``.
+       c. RAG search using ``entities.product_name`` in this company's Weaviate collection.
+       d. LLM composes a WhatsApp-friendly product detail message.
+       e. Send to ``data.phone_number`` via the company's WhatsApp provider.
+
+    Company isolation
+    -----------------
+    The ``{company_id}`` path parameter determines which tenant's config and
+    Weaviate collection are used — no cross-tenant data access is possible.
+    """
+    body_bytes = await request.body()
+
+    s = get_settings()
+    secret = (s.botflow_webhook_secret or "").strip()
+    if secret:
+        sig_header = request.headers.get("x-webhook-signature", "")
+        computed = "sha256=" + _hmac.new(
+            secret.encode(), body_bytes, hashlib.sha256
+        ).hexdigest()
+        if not _hmac.compare_digest(sig_header, computed):
+            logger.warning(
+                "BOTFLOW invalid signature rejected",
+                extra={"company_id": str(company_id)},
+            )
+            raise HTTPException(status_code=401, detail="Invalid webhook signature")
+
+    try:
+        payload = json.loads(body_bytes)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+
+    event = payload.get("event")
+    call_id = str(payload.get("call_id") or "")
+    data: dict = payload.get("data") or {}
+
+    if event != "call_postprocessing":
+        return {"status": "ignored", "reason": f"unhandled event: {event}"}
+
+    background_tasks.add_task(
+        _process_BOTFLOW_event,
+        company_id,
+        call_id,
+        data,
+        weaviate_client,
+        llm_client,
+    )
+    return {"status": "accepted"}

@@ -4,9 +4,9 @@ DocumentService – orchestrates file upload and document metadata storage.
 Responsibilities
 ----------------
 1. Validate that the company exists.
-2. Generate a deterministic S3 key (tenant-safe).
-3. Upload raw bytes to S3 via the StorageClient abstraction.
-4. Persist document metadata in Supabase (documents table).
+2. Generate a deterministic storage key (tenant-safe).
+3. Upload raw bytes to Supabase Storage via the StorageClient abstraction.
+4. Persist document metadata in Supabase Postgres (documents table).
 5. Create a ``pending`` DocumentIndexJob for background processing.
 
 The raw file bytes are NEVER stored in the database.
@@ -76,17 +76,17 @@ class DocumentService:
             if company is None:
                 raise NotFoundError("Company", company_id)
 
-        # Generate document id up-front so we can include it in the S3 key
+        # Generate document id up-front so we can include it in the storage key
         doc_id = uuid.uuid4()
         s3_key = build_document_s3_key(company_id, doc_id, file_name)
         from app.core.config import get_settings
-        bucket = get_settings().s3_bucket_name
+        bucket = get_settings().supabase_storage_bucket
 
-        # Upload to S3
+        # Upload to Supabase Storage
         self._storage.upload_file(file_bytes, s3_key, mime_type)
         logger.info(
-            "Document uploaded to S3",
-            extra={"company_id": str(company_id), "s3_key": s3_key},
+            "Document uploaded to Supabase Storage",
+            extra={"company_id": str(company_id), "storage_key": s3_key},
         )
 
         # Persist metadata

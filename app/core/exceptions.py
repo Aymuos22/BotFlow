@@ -1,5 +1,5 @@
 """
-Domain exception hierarchy for the MindoraxAI backend.
+Domain exception hierarchy for the BotFlow backend.
 
 All custom exceptions extend ``AppException`` so the global FastAPI
 exception handler can produce consistent structured JSON responses.

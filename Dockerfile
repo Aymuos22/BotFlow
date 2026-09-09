@@ -23,15 +23,12 @@ RUN pip install --upgrade pip \
 FROM python:3.10-slim AS runtime
 
 # Non-root user for security.
-# Create a proper home directory so HuggingFace / fastembed cache dirs are writable.
 RUN groupadd -r appuser && useradd -r -g appuser -m -d /home/appuser appuser \
-    && mkdir -p /home/appuser/.cache/huggingface/xet/logs \
     && chown -R appuser:appuser /home/appuser
 
 # Runtime media conversion for inbound WhatsApp voice notes (OGG/AMR -> MP3).
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
-    libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -73,19 +70,25 @@ ENV APP_VERSION=0.3.0
 # Supabase / Postgres
 ENV DATABASE_URL=""
 
+# Supabase Storage
+ENV SUPABASE_URL=""
+ENV SUPABASE_SERVICE_ROLE_KEY=""
+ENV SUPABASE_STORAGE_BUCKET="documents"
+ENV SUPABASE_JWT_SECRET=""
+
 # Weaviate
 ENV WEAVIATE_URL=""
 ENV WEAVIATE_API_KEY=""
 
-# AWS S3 (use IAM role on EC2 instead of static keys)
-ENV S3_BUCKET_NAME=""
-ENV AWS_REGION="us-east-1"
-# ENV AWS_ACCESS_KEY_ID=""
-# ENV AWS_SECRET_ACCESS_KEY=""
+# LLM — Groq
+ENV LLM_PROVIDER="groq"
+ENV GROQ_API_KEY=""
+ENV LLM_MODEL="llama-3.3-70b-versatile"
 
-# OpenAI
-ENV OPENAI_API_KEY=""
-ENV LLM_MODEL="gpt-4o-mini"
+# Embeddings — VoyageAI
+ENV EMBEDDING_PROVIDER="voyage"
+ENV VOYAGE_API_KEY=""
+ENV EMBEDDING_MODEL="voyage-3"
 
 # Security
 ENV SECRET_KEY=""
@@ -99,4 +102,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
 # Single worker by default — safe for small instances (~2GB RAM). Scale with replicas or override CMD.
+# Local dev only — production uses Render native Python (render.yaml)
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

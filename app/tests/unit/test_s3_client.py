@@ -1,120 +1,116 @@
 """
-Unit tests for the S3StorageClient using moto (AWS mock).
+Unit tests for SupabaseStorageClient using unittest.mock.
 
-All tests run against a moto-mocked S3; no real AWS credentials needed.
+All tests patch supabase.create_client so no real Supabase credentials
+are needed.
 """
-import io
-import uuid
-import pytest
-import boto3
-from moto import mock_aws
+from unittest.mock import MagicMock, patch
 
-from app.integrations.s3.client import S3StorageClient
+import pytest
+
+from app.integrations.s3.client import SupabaseStorageClient
 
 
 BUCKET = "test-bucket"
-REGION = "us-east-1"
+SUPABASE_URL = "https://test.supabase.co"
+SERVICE_ROLE_KEY = "fake-service-role-key"
 
 
-def _make_client() -> S3StorageClient:
-    return S3StorageClient(
-        bucket_name=BUCKET,
-        region=REGION,
-        access_key_id="fake-key",
-        secret_access_key="fake-secret",
-    )
+def _make_client(mock_supabase_client: MagicMock) -> SupabaseStorageClient:
+    """Create a SupabaseStorageClient with a patched supabase create_client."""
+    with patch("app.integrations.s3.client.create_client", return_value=mock_supabase_client):
+        return SupabaseStorageClient(
+            supabase_url=SUPABASE_URL,
+            service_role_key=SERVICE_ROLE_KEY,
+            bucket_name=BUCKET,
+        )
 
 
-def _create_bucket():
-    """Create the moto-mocked S3 bucket."""
-    s3 = boto3.client("s3", region_name=REGION)
-    s3.create_bucket(Bucket=BUCKET)
+@pytest.fixture
+def mock_supabase():
+    """Return a fully mocked supabase client."""
+    client = MagicMock()
+    storage_bucket = MagicMock()
+    client.storage.from_.return_value = storage_bucket
+    return client, storage_bucket
 
 
-@mock_aws
-class TestS3StorageClientUpload:
-    def test_upload_file_returns_key(self):
-        _create_bucket()
-        client = _make_client()
+class TestSupabaseStorageClientUpload:
+    def test_upload_file_returns_key(self, mock_supabase):
+        supabase_mock, bucket_mock = mock_supabase
+        client = _make_client(supabase_mock)
         key = client.upload_file(b"hello world", "test/file.txt", "text/plain")
         assert key == "test/file.txt"
+        bucket_mock.upload.assert_called_once()
 
-    def test_uploaded_file_retrievable(self):
-        _create_bucket()
-        client = _make_client()
-        data = b"important document content"
-        client.upload_file(data, "docs/report.pdf", "application/pdf")
-        fetched = client.get_file("docs/report.pdf")
-        assert fetched == data
-
-    def test_upload_overwrites_existing_key(self):
-        _create_bucket()
-        client = _make_client()
-        client.upload_file(b"v1", "key.txt", "text/plain")
-        client.upload_file(b"v2", "key.txt", "text/plain")
-        assert client.get_file("key.txt") == b"v2"
+    def test_upload_calls_correct_bucket(self, mock_supabase):
+        supabase_mock, bucket_mock = mock_supabase
+        client = _make_client(supabase_mock)
+        client.upload_file(b"data", "docs/report.pdf", "application/pdf")
+        supabase_mock.storage.from_.assert_called_with(BUCKET)
 
 
-@mock_aws
-class TestS3StorageClientDelete:
-    def test_delete_existing_file_returns_true(self):
-        _create_bucket()
-        client = _make_client()
-        client.upload_file(b"data", "to_delete.txt", "text/plain")
+class TestSupabaseStorageClientGetFile:
+    def test_get_file_returns_bytes(self, mock_supabase):
+        supabase_mock, bucket_mock = mock_supabase
+        bucket_mock.download.return_value = b"file content"
+        client = _make_client(supabase_mock)
+        data = client.get_file("docs/file.txt")
+        assert data == b"file content"
+        bucket_mock.download.assert_called_once_with("docs/file.txt")
+
+
+class TestSupabaseStorageClientDelete:
+    def test_delete_returns_true(self, mock_supabase):
+        supabase_mock, bucket_mock = mock_supabase
+        client = _make_client(supabase_mock)
         result = client.delete_file("to_delete.txt")
         assert result is True
-
-    def test_deleted_file_no_longer_exists(self):
-        _create_bucket()
-        client = _make_client()
-        client.upload_file(b"data", "temp.txt", "text/plain")
-        client.delete_file("temp.txt")
-        assert client.file_exists("temp.txt") is False
-
-    def test_delete_nonexistent_key_returns_true(self):
-        # S3 delete is idempotent
-        _create_bucket()
-        client = _make_client()
-        result = client.delete_file("nonexistent.txt")
-        assert result is True
+        bucket_mock.remove.assert_called_once_with(["to_delete.txt"])
 
 
-@mock_aws
-class TestS3StorageClientExists:
-    def test_file_exists_after_upload(self):
-        _create_bucket()
-        client = _make_client()
-        client.upload_file(b"x", "exists.txt", "text/plain")
-        assert client.file_exists("exists.txt") is True
+class TestSupabaseStorageClientExists:
+    def test_file_exists_when_found_in_list(self, mock_supabase):
+        supabase_mock, bucket_mock = mock_supabase
+        bucket_mock.list.return_value = [{"name": "file.txt"}, {"name": "other.txt"}]
+        client = _make_client(supabase_mock)
+        assert client.file_exists("folder/file.txt") is True
 
-    def test_file_not_exists_when_not_uploaded(self):
-        _create_bucket()
-        client = _make_client()
-        assert client.file_exists("not_there.txt") is False
+    def test_file_not_exists_when_absent_from_list(self, mock_supabase):
+        supabase_mock, bucket_mock = mock_supabase
+        bucket_mock.list.return_value = [{"name": "other.txt"}]
+        client = _make_client(supabase_mock)
+        assert client.file_exists("folder/missing.txt") is False
+
+    def test_file_not_exists_on_exception(self, mock_supabase):
+        supabase_mock, bucket_mock = mock_supabase
+        bucket_mock.list.side_effect = Exception("network error")
+        client = _make_client(supabase_mock)
+        assert client.file_exists("folder/file.txt") is False
 
 
-@mock_aws
-class TestS3StorageClientPresignedUrl:
-    def test_presigned_url_is_string(self):
-        _create_bucket()
-        client = _make_client()
-        client.upload_file(b"data", "doc.txt", "text/plain")
+class TestSupabaseStorageClientPresignedUrl:
+    def test_presigned_url_from_dict_signedURL(self, mock_supabase):
+        supabase_mock, bucket_mock = mock_supabase
+        bucket_mock.create_signed_url.return_value = {
+            "signedURL": "https://supabase.co/signed/url"
+        }
+        client = _make_client(supabase_mock)
         url = client.generate_presigned_url("doc.txt")
-        assert isinstance(url, str)
-        assert "doc.txt" in url or "X-Amz" in url
+        assert url == "https://supabase.co/signed/url"
 
-    def test_presigned_url_custom_expiry(self):
-        _create_bucket()
-        client = _make_client()
-        client.upload_file(b"data", "doc.txt", "text/plain")
-        url = client.generate_presigned_url("doc.txt", expires_in=3600)
-        assert isinstance(url, str)
+    def test_presigned_url_from_dict_signedUrl(self, mock_supabase):
+        supabase_mock, bucket_mock = mock_supabase
+        bucket_mock.create_signed_url.return_value = {
+            "signedUrl": "https://supabase.co/signed/url2"
+        }
+        client = _make_client(supabase_mock)
+        url = client.generate_presigned_url("doc.txt")
+        assert url == "https://supabase.co/signed/url2"
 
-
-@mock_aws
-class TestS3StorageClientGetFile:
-    def test_get_nonexistent_key_raises(self):
-        _create_bucket()
-        client = _make_client()
-        with pytest.raises(Exception):
-            client.get_file("does_not_exist.txt")
+    def test_presigned_url_custom_expiry(self, mock_supabase):
+        supabase_mock, bucket_mock = mock_supabase
+        bucket_mock.create_signed_url.return_value = {"signedURL": "https://x.co/url"}
+        client = _make_client(supabase_mock)
+        client.generate_presigned_url("doc.txt", expires_in=7200)
+        bucket_mock.create_signed_url.assert_called_once_with("doc.txt", 7200)

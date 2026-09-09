@@ -1,7 +1,7 @@
 version: "3.9"
 
 # ──────────────────────────────────────────────────────────────────────────────
-# MindoraxAI – Local / Dev Docker Compose
+# BotFlow – Local / Dev Docker Compose
 #
 # Services:
 #   api          – FastAPI application (hot-reload in dev)
@@ -42,7 +42,7 @@ services:
       LOG_LEVEL: INFO
       DATABASE_URL: ${DATABASE_URL:-}   # set in .env
       WEAVIATE_URL: http://weaviate:8080
-      S3_BUCKET_NAME: ${S3_BUCKET_NAME:-mindorax-documents-dev}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME:-botflow-documents-dev}
       AWS_REGION: ${AWS_REGION:-us-east-1}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}

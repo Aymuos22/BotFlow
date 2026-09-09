@@ -1,5 +1,5 @@
 """
-Shared pytest fixtures for the MindoraxAI test suite.
+Shared pytest fixtures for the BotFlow test suite.
 
 Test strategy
 -------------
@@ -140,19 +140,19 @@ def mock_weaviate_client() -> AsyncMock:
 @pytest.fixture
 def mock_storage_client() -> MagicMock:
     """
-    S3 StorageClient mock.
+    StorageClient mock.
 
-    Note: S3StorageClient methods are SYNC (boto3 wrapping), so we use
-    MagicMock (not AsyncMock) for the storage client.
+    Note: SupabaseStorageClient methods are SYNC (supabase-py wrapping), so we
+    use MagicMock (not AsyncMock) for the storage client.
     """
-    from app.integrations.s3.client import S3StorageClient
+    from app.integrations.s3.client import SupabaseStorageClient
 
-    mock = MagicMock(spec=S3StorageClient)
+    mock = MagicMock(spec=SupabaseStorageClient)
     mock.upload_file.return_value = "companies/test/documents/test/file.txt"
     mock.get_file.return_value = b"Sample document content for testing."
     mock.file_exists.return_value = True
     mock.delete_file.return_value = True
-    mock.generate_presigned_url.return_value = "https://s3.example.com/presigned-url"
+    mock.generate_presigned_url.return_value = "https://supabase.example.com/presigned-url"
     return mock
 
 

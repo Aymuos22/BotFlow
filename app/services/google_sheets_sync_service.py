@@ -274,7 +274,7 @@ class GoogleSheetsSyncService:
             return config.google_sheet_id
         if not settings.google_sheets_create_spreadsheets:
             return None
-        title = f"{company.display_name if company else config.company_id} - Mindorax Live Inbox"
+        title = f"{company.display_name if company else config.company_id} - BotFlow Live Inbox"
         spreadsheet_id, spreadsheet_url = await self._client.create_spreadsheet(title)
         config.google_sheet_id = spreadsheet_id
         config.google_sheet_url = spreadsheet_url

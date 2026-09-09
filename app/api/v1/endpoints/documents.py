@@ -4,7 +4,7 @@ Document management endpoints.
 Routes
 ------
 POST /companies/{company_id}/documents/upload
-    Upload a file → store in S3 → save metadata → create indexing job.
+    Upload a file → store in Supabase Storage → save metadata → create indexing job.
 
 GET  /companies/{company_id}/documents
     List all documents for a company.
@@ -24,7 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.exceptions import NotFoundError
 from app.core.response import APIResponse
-from app.integrations.s3.client import S3StorageClient, get_storage_client
+from app.integrations.s3.client import SupabaseStorageClient, get_storage_client
 from app.integrations.weaviate.client import WeaviateClient, get_weaviate_client
 from app.repositories.company_config_repository import CompanyConfigRepository
 from app.repositories.company_repository import CompanyRepository
@@ -51,7 +51,7 @@ router = APIRouter(tags=["documents"])
 
 def _doc_service(
     db: AsyncSession = Depends(get_db),
-    storage: S3StorageClient = Depends(get_storage_client),
+    storage: SupabaseStorageClient = Depends(get_storage_client),
 ) -> DocumentService:
     return DocumentService(
         document_repo=DocumentRepository(db),
@@ -63,7 +63,7 @@ def _doc_service(
 
 def _indexing_service(
     db: AsyncSession = Depends(get_db),
-    storage: S3StorageClient = Depends(get_storage_client),
+    storage: SupabaseStorageClient = Depends(get_storage_client),
     weaviate: WeaviateClient = Depends(get_weaviate_client),
 ) -> IndexingService:
     s = get_settings()

@@ -1,0 +1,175 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Render.com deployment — FREE TIER — Native Python (no Docker)
+#
+# Free tier:
+#   - 512 MB RAM, shared CPU
+#   - Service sleeps after 15 min of inactivity
+#   - The keep-alive cron job below pings /health every 5 min to stay awake
+#
+# Setup:
+#   1. Connect this repo in Render dashboard → New → Blueprint
+#   2. Render auto-detects this file
+#   3. Add the env vars marked  sync: false  in Render → Environment
+#   4. After first deploy: replace YOUR_APP_URL in the cron dockerCommand below
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ── Main API (FastAPI) ──────────────────────────────────────────────────────
+  - type: web
+    name: botflow-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # Runs DB migrations then starts uvicorn on every deploy
+    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /health
+
+    envVars:
+      # ── App ─────────────────────────────────────────────────────────────────
+      - key: APP_ENV
+        value: production
+      - key: APP_NAME
+        value: BotFlow
+      - key: DEBUG
+        value: "false"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: PYTHONPATH
+        value: .
+      # Update to your Render URL after first deploy, e.g. https://botflow-api.onrender.com
+      - key: PUBLIC_BASE_URL
+        sync: false
+
+      # ── Security ────────────────────────────────────────────────────────────
+      - key: SECRET_KEY
+        generateValue: true
+
+      # ── Database (Supabase Postgres) ─────────────────────────────────────────
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_POOL_SIZE
+        value: "2"
+      - key: DB_MAX_OVERFLOW
+        value: "1"
+
+      # ── Supabase ─────────────────────────────────────────────────────────────
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        value: documents
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+
+      # ── LLM (Groq) ───────────────────────────────────────────────────────────
+      - key: LLM_PROVIDER
+        value: groq
+      - key: GROQ_API_KEY
+        sync: false
+      - key: LLM_MODEL
+        value: llama-3.3-70b-versatile
+      - key: LLM_TIMEOUT_SECONDS
+        value: "60"
+      - key: LLM_TEMPERATURE
+        value: "1"
+      - key: LLM_MAX_COMPLETION_TOKENS
+        value: "1024"
+      - key: LLM_MAX_CONTEXT_CHARS
+        value: "12000"
+      - key: LLM_MAX_SYSTEM_CHARS
+        value: "6000"
+      - key: LLM_STREAM
+        value: "false"
+
+      # ── Embeddings (VoyageAI) ────────────────────────────────────────────────
+      - key: EMBEDDING_PROVIDER
+        value: voyage
+      - key: VOYAGE_API_KEY
+        sync: false
+      - key: EMBEDDING_MODEL
+        value: voyage-3
+      - key: EMBEDDING_BATCH_SIZE
+        value: "128"
+      - key: RAG_EMBEDDINGS_ENABLED
+        value: "false"
+
+      # ── Weaviate ─────────────────────────────────────────────────────────────
+      - key: WEAVIATE_URL
+        sync: false
+      - key: WEAVIATE_API_KEY
+        sync: false
+
+      # ── RAG ──────────────────────────────────────────────────────────────────
+      - key: RAG_SCORE_THRESHOLD
+        value: "0.4"
+      - key: RAG_TOP_K
+        value: "5"
+      - key: RAG_CONVERSATION_TURNS
+        value: "8"
+      - key: RAG_AUGMENT_SEARCH_WITH_HISTORY
+        value: "true"
+      - key: RAG_HYBRID_ALPHA
+        value: "0.5"
+      - key: CHUNK_SIZE
+        value: "1000"
+      - key: CHUNK_OVERLAP
+        value: "100"
+      - key: INDEXING_MAX_RETRIES
+        value: "3"
+
+      # ── Audio Transcription (Groq Whisper) ────────────────────────────────────
+      - key: WHATSAPP_AUDIO_TRANSCRIPTION_ENABLED
+        value: "true"
+      - key: WHATSAPP_AUDIO_MAX_BYTES
+        value: "15000000"
+
+      # ── Portal ───────────────────────────────────────────────────────────────
+      - key: PORTAL_ADMIN_API_KEY
+        sync: false
+      - key: PORTAL_BOOTSTRAP_SECRET
+        sync: false
+      - key: PORTAL_TOKEN_MAX_AGE_SECONDS
+        value: "86400"
+
+      # ── CORS ─────────────────────────────────────────────────────────────────
+      - key: CORS_ALLOW_ALL
+        value: "true"
+      - key: CORS_ORIGINS
+        sync: false
+
+  # ── Keep-alive cron (prevents free tier from sleeping) ──────────────────────
+  # Pings /health every 5 minutes — free on Render (cron jobs have no plan cost).
+  # !! Replace YOUR_APP_URL with your actual Render web service URL !!
+  - type: cron
+    name: botflow-keepalive
+    runtime: python
+    plan: free
+    schedule: "*/5 * * * *"
+    buildCommand: echo "no deps"
+    startCommand: python -c "import urllib.request; urllib.request.urlopen('https://botflow-api.onrender.com/health')"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# WhatsApp outbox worker — uncomment when upgrading to Starter ($7/mo)
+# This enables WhatsApp campaigns and scheduled follow-up messages.
+#
+# - type: worker
+#   name: botflow-whatsapp-worker
+#   runtime: python
+#   plan: starter
+#   buildCommand: pip install -r requirements.txt
+#   startCommand: python -m app.workers.whatsapp_outbox_worker
+#   envVars:
+#     - key: DATABASE_URL
+#       sync: false
+#     - key: SECRET_KEY
+#       sync: false
+#     - key: GROQ_API_KEY
+#       sync: false
+#     - key: LLM_MODEL
+#       value: llama-3.3-70b-versatile
+#     - key: SUPABASE_URL
+#       sync: false
+#     - key: SUPABASE_SERVICE_ROLE_KEY
+#       sync: false
+# ──────────────────────────────────────────────────────────────────────────────

@@ -2,9 +2,10 @@
 Text embeddings for Weaviate hybrid search.
 
 Disabled unless ``RAG_EMBEDDINGS_ENABLED=true``. Supported providers:
-``openai`` (requires ``EMBEDDING_API_KEY`` or ``OPENAI_API_KEY``) and
-``fastembed`` (local ONNX model). When disabled, retrieval stays BM25-only and
-existing collections without vectors continue to work.
+``voyage`` (VoyageAI – recommended, requires ``VOYAGE_API_KEY``) and
+``openai`` (requires ``EMBEDDING_API_KEY`` or ``OPENAI_API_KEY``).
+When disabled, retrieval stays BM25-only and existing collections without
+vectors continue to work.
 """
 from __future__ import annotations
 
@@ -68,40 +69,40 @@ class OpenAIEmbeddingClient:
         return out
 
 
-class FastEmbedClient:
-    """Local ONNX embeddings through Qdrant FastEmbed."""
+class VoyageEmbeddingClient:
+    """VoyageAI cloud embeddings (async)."""
 
     def __init__(
         self,
-        model: str = "BAAI/bge-small-en-v1.5",
+        api_key: str,
+        model: str = "voyage-3",
         *,
-        batch_size: int = 64,
-        cache_dir: str | None = None,
+        batch_size: int = 128,
     ) -> None:
-        from fastembed import TextEmbedding
+        import voyageai
 
-        self._model = TextEmbedding(
-            model_name=model,
-            batch_size=max(1, batch_size),
-            cache_dir=cache_dir,
-        )
+        self._client = voyageai.AsyncClient(api_key=api_key)
+        self._model = model
+        self._batch_size = max(1, batch_size)
 
     async def embed_query(self, text: str) -> List[float]:
-        import asyncio
+        import voyageai
 
-        vecs = await asyncio.to_thread(
-            lambda: [_plain_vector(v) for v in self._model.query_embed([text])]
-        )
+        result = await self._client.embed([text], model=self._model, input_type="query")
+        vecs: List[List[float]] = result.embeddings
         return vecs[0] if vecs else []
 
     async def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        import asyncio
-
         if not texts:
             return []
-        return await asyncio.to_thread(
-            lambda: [_plain_vector(v) for v in self._model.passage_embed(texts)]
-        )
+        out: List[List[float]] = []
+        for i in range(0, len(texts), self._batch_size):
+            batch = texts[i : i + self._batch_size]
+            result = await self._client.embed(
+                batch, model=self._model, input_type="document"
+            )
+            out.extend(result.embeddings)
+        return out
 
 
 _embedding_instance: Optional[EmbeddingClientProtocol] = None
@@ -118,12 +119,19 @@ def get_embedding_client() -> Optional[EmbeddingClientProtocol]:
     if not s.rag_embeddings_enabled:
         return None
     if _embedding_instance is None:
-        provider = (s.embedding_provider or "openai").strip().lower()
-        if provider == "fastembed":
-            _embedding_instance = FastEmbedClient(
-                model=s.embedding_model or "BAAI/bge-small-en-v1.5",
+        provider = (s.embedding_provider or "voyage").strip().lower()
+        if provider == "voyage":
+            key = (s.voyage_api_key or s.embedding_api_key or "").strip()
+            if not key:
+                logger.warning(
+                    "RAG_EMBEDDINGS_ENABLED with voyage provider but no "
+                    "VOYAGE_API_KEY / EMBEDDING_API_KEY; skipping embeddings."
+                )
+                return None
+            _embedding_instance = VoyageEmbeddingClient(
+                api_key=key,
+                model=s.embedding_model or "voyage-3",
                 batch_size=s.embedding_batch_size,
-                cache_dir=s.embedding_cache_dir,
             )
         elif provider == "openai":
             key = (s.embedding_api_key or s.openai_api_key or "").strip()

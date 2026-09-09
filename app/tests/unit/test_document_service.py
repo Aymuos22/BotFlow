@@ -58,7 +58,7 @@ def mock_job_repo():
 
 @pytest.fixture
 def mock_storage():
-    # S3 client methods are synchronous (boto3), so MagicMock is correct here
+    # SupabaseStorageClient methods are synchronous (supabase-py), so MagicMock is correct here
     return MagicMock()
 
 

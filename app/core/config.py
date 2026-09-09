@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     # ------------------------------------------------------------------ #
     # Application
     # ------------------------------------------------------------------ #
-    app_name: str = Field(default="MindoraxAI", alias="APP_NAME")
+    app_name: str = Field(default="BotFlow", alias="APP_NAME")
     app_env: str = Field(default="development", alias="APP_ENV")
     app_version: str = Field(default="1.0.0", alias="APP_VERSION")
     debug: bool = Field(default=False, alias="DEBUG")
@@ -69,7 +69,7 @@ class Settings(BaseSettings):
     # Database (Supabase Postgres / SQLite for local)
     # ------------------------------------------------------------------ #
     database_url: str = Field(
-        default="sqlite+aiosqlite:///./mindorax_dev.db",
+        default="sqlite+aiosqlite:///./botflow_dev.db",
         alias="DATABASE_URL",
     )
     db_echo: bool = Field(default=False, alias="DB_ECHO")
@@ -96,8 +96,8 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return _normalize_async_database_url(v)
         return v
-    db_pool_size: int = Field(default=4, alias="DB_POOL_SIZE")
-    db_max_overflow: int = Field(default=2, alias="DB_MAX_OVERFLOW")
+    db_pool_size: int = Field(default=2, alias="DB_POOL_SIZE")
+    db_max_overflow: int = Field(default=1, alias="DB_MAX_OVERFLOW")
     db_pool_recycle_seconds: int = Field(
         default=300,
         alias="DB_POOL_RECYCLE_SECONDS",
@@ -260,19 +260,7 @@ class Settings(BaseSettings):
     whatsapp_audio_transcription_model: str = Field(
         default="gpt-4o-mini-transcribe",
         alias="WHATSAPP_AUDIO_TRANSCRIPTION_MODEL",
-    )
-    whatsapp_audio_local_fallback_enabled: bool = Field(
-        default=True,
-        alias="WHATSAPP_AUDIO_LOCAL_FALLBACK_ENABLED",
-    )
-    whatsapp_audio_local_model: str = Field(
-        default="tiny",
-        alias="WHATSAPP_AUDIO_LOCAL_MODEL",
-        description="faster-whisper model size/name for local WhatsApp voice transcription.",
-    )
-    whatsapp_audio_local_compute_type: str = Field(
-        default="int8",
-        alias="WHATSAPP_AUDIO_LOCAL_COMPUTE_TYPE",
+        description="OpenAI transcription model (used when OPENAI_API_KEY is set). Groq Whisper is used as automatic fallback.",
     )
     whatsapp_audio_max_bytes: int = Field(
         default=15_000_000,
@@ -288,6 +276,19 @@ class Settings(BaseSettings):
     )
 
     # ------------------------------------------------------------------ #
+    # BotFlow voice-call webhook
+    # ------------------------------------------------------------------ #
+    botflow_webhook_secret: Optional[str] = Field(
+        default=None,
+        alias="BOTFLOW_WEBHOOK_SECRET",
+        description=(
+            "HMAC-SHA256 secret for verifying X-Webhook-Signature from BotFlow "
+            "post-call webhooks. When set, requests with an invalid or missing "
+            "signature are rejected with 401."
+        ),
+    )
+
+    # ------------------------------------------------------------------ #
     # Weaviate Vector DB
     # ------------------------------------------------------------------ #
     weaviate_url: str = Field(
@@ -299,20 +300,22 @@ class Settings(BaseSettings):
     )
 
     # ------------------------------------------------------------------ #
-    # AWS S3 – document file storage
+    # Supabase Storage – document file storage (replaces AWS S3)
     # ------------------------------------------------------------------ #
-    s3_bucket_name: str = Field(
-        default="mindorax-documents-dev", alias="S3_BUCKET_NAME"
+    supabase_url: str = Field(
+        default="",
+        alias="SUPABASE_URL",
+        description="Supabase project URL, e.g. https://xxxx.supabase.co",
     )
-    s3_region: str = Field(default="us-east-1", alias="S3_REGION")
-    aws_access_key_id: Optional[str] = Field(default=None, alias="AWS_ACCESS_KEY_ID")
-    aws_secret_access_key: Optional[str] = Field(
-        default=None, alias="AWS_SECRET_ACCESS_KEY"
+    supabase_service_role_key: str = Field(
+        default="",
+        alias="SUPABASE_SERVICE_ROLE_KEY",
+        description="Supabase service-role key (secret) for backend storage operations.",
     )
-    aws_endpoint_url: Optional[str] = Field(
-        default=None,
-        alias="AWS_ENDPOINT_URL",
-        description="Override for localstack / moto tests",
+    supabase_storage_bucket: str = Field(
+        default="documents",
+        alias="SUPABASE_STORAGE_BUCKET",
+        description="Supabase Storage bucket name where uploaded documents are stored.",
     )
 
     # ------------------------------------------------------------------ #
@@ -384,27 +387,29 @@ class Settings(BaseSettings):
         description="If true, embed chunks at index time and run Weaviate hybrid search.",
     )
     embedding_provider: str = Field(
-        default="openai",
+        default="voyage",
         alias="EMBEDDING_PROVIDER",
-        description="Embedding backend: openai or fastembed.",
+        description="Embedding backend: voyage (VoyageAI) or openai.",
     )
     embedding_model: str = Field(
-        default="text-embedding-3-small",
+        default="voyage-3",
         alias="EMBEDDING_MODEL",
+        description="VoyageAI model name, e.g. voyage-3 or voyage-3-lite.",
+    )
+    voyage_api_key: Optional[str] = Field(
+        default=None,
+        alias="VOYAGE_API_KEY",
+        description="VoyageAI API key for embedding generation.",
     )
     embedding_api_key: Optional[str] = Field(
         default=None,
         alias="EMBEDDING_API_KEY",
-        description="Optional; defaults to OPENAI_API_KEY when unset.",
-    )
-    embedding_cache_dir: Optional[str] = Field(
-        default=None,
-        alias="EMBEDDING_CACHE_DIR",
-        description="Optional local cache directory for FastEmbed model files.",
+        description="Generic embedding API key override (falls back to VOYAGE_API_KEY or OPENAI_API_KEY).",
     )
     embedding_batch_size: int = Field(
-        default=64,
+        default=128,
         alias="EMBEDDING_BATCH_SIZE",
+        description="Number of texts per embedding batch (VoyageAI supports up to 128).",
     )
     chunk_size: int = Field(default=1000, alias="CHUNK_SIZE")
     chunk_overlap: int = Field(default=100, alias="CHUNK_OVERLAP")

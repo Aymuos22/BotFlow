@@ -259,6 +259,43 @@ class MetaWhatsAppClient:
         except Exception:
             return {}
 
+    async def subscribe_waba_to_app(self, *, waba_id: str) -> Dict[str, Any]:
+        """
+        Subscribe a WhatsApp Business Account to this Meta App so that webhook
+        events (messages, statuses, etc.) are delivered to the registered
+        callback URL.
+
+        Graph API call::
+
+            POST /{version}/{waba_id}/subscribed_apps
+            Authorization: Bearer {access_token}
+
+        Returns ``{"success": true}`` on success.
+        Must be called once per WABA; safe to re-call (idempotent on Meta's side).
+        """
+        waba = (waba_id or "").strip()
+        if not waba:
+            raise ExternalServiceError(
+                service="MetaWhatsApp",
+                message="subscribe_waba_to_app failed: empty waba_id.",
+            )
+        url = f"{self._graph_root}/{quote(waba, safe='')}/subscribed_apps"
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json",
+        }
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            response = await client.post(url, headers=headers)
+        self._raise_for_status(response, "subscribe_waba_to_app")
+        logger.info(
+            "Meta WABA subscribed to app",
+            extra={"waba_id": waba},
+        )
+        try:
+            return response.json()
+        except Exception:
+            return {}
+
     async def send_typing_indicator(self, message_id: str) -> Dict[str, Any]:
         """
         Send WhatsApp Cloud API typing indicator using a message id context.
