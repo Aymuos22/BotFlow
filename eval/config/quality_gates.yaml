@@ -1,0 +1,89 @@
+# ============================================================
+# Quality Gates Configuration
+# ============================================================
+#
+# These thresholds determine whether an evaluation run "passes" CI.
+# A non-zero exit code is returned when any gate fails.
+#
+# THRESHOLD RATIONALE
+# -------------------
+# These are conservative defaults for a production chatbot serving real
+# customers.  Tighten them as your system matures.
+#
+# recall@5:
+#   80% means the correct document is retrieved in 4 out of 5 queries.
+#   Below 80%: the retrieval layer needs work (more documents, better chunking,
+#   or enable vector embeddings).
+#
+# faithfulness:
+#   80% means the judge confirms the answer is grounded in context for 4 in 5 queries.
+#   Below 80%: hallucination is likely happening at a rate that will damage trust.
+#
+# max_hallucination_rate:
+#   Up to 10% of answers with hallucinated claims is the absolute maximum.
+#   Below 5% is the target once vector embeddings are enabled.
+#
+# max_fallback_rate:
+#   20% fallback rate means 1 in 5 valid customer questions is not answered.
+#   Above this: expand the knowledge base or lower the score threshold.
+#
+# max_regression:
+#   3% tolerance on any metric before it counts as a regression.
+#   This prevents small statistical fluctuations on a small dataset from
+#   blocking every deployment.
+# ============================================================
+
+quality_gates:
+
+  # ── Retrieval quality ────────────────────────────────────────────────
+  retrieval_recall_at_5:
+    minimum: 0.80
+    notes: "Fraction of queries where the relevant document is in top-5"
+
+  retrieval_recall_at_3:
+    minimum: 0.70
+
+  retrieval_mrr:
+    minimum: 0.70
+    notes: "Mean Reciprocal Rank — measures how high the first relevant result is ranked"
+
+  retrieval_ndcg_at_5:
+    minimum: 0.70
+
+  # ── Generation quality (LLM judge scores — normalised 0-1) ───────────
+  faithfulness:
+    minimum: 0.80
+    notes: "Fraction of answer content grounded in retrieved context"
+
+  correctness:
+    minimum: 0.75
+    notes: "How factually correct the answer is vs expected answer"
+
+  relevance:
+    minimum: 0.80
+    notes: "How directly the answer addresses the user question"
+
+  # ── Deterministic generation metric ─────────────────────────────────
+  token_f1:
+    minimum: 0.50
+    notes: "Token-level F1 vs expected answers (only where expected answer is provided)"
+
+  # ── Failure rate gates ───────────────────────────────────────────────
+  max_hallucination_rate:
+    maximum: 0.10
+    notes: "Max fraction of examples with hallucination failure type"
+
+  max_fallback_rate:
+    maximum: 0.20
+    notes: "Max fraction of answerable queries that triggered fallback"
+
+  max_wrong_document_rate:
+    maximum: 0.20
+    notes: "Max fraction with wrong_document retrieval failure"
+
+  # ── Regression tolerance ─────────────────────────────────────────────
+  # Applied during `compare` and `gate-check --baseline`, not during
+  # standalone gate-check.  Differences smaller than this are ignored.
+  max_regression:
+    maximum: 0.03
+    notes: "Max allowed drop in any metric vs baseline (3 percentage points)"

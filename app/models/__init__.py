@@ -33,6 +33,11 @@ from app.models.whatsapp_campaign import (  # noqa: F401
 from app.models.product import Product  # noqa: F401
 from app.models.product_event import ProductEvent  # noqa: F401
 
+# Evaluation framework models
+from app.models.eval_run import EvalRun  # noqa: F401
+from app.models.eval_result import EvalResult  # noqa: F401
+from app.models.human_label import HumanLabel  # noqa: F401
+
 __all__ = [
     "Base",
     # Phase 1
@@ -54,4 +59,8 @@ __all__ = [
     # Phase 4
     "Product",
     "ProductEvent",
+    # Evaluation
+    "EvalRun",
+    "EvalResult",
+    "HumanLabel",
 ]
