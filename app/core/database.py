@@ -18,12 +18,6 @@ from sqlalchemy.ext.asyncio import (
 
 from app.core.config import settings
 
-_PGBOUNCER_MARKERS = ("pooler.supabase.com", ":6543/")
-
-
-def _is_pgbouncer_url(url: str) -> bool:
-    return any(m in url for m in _PGBOUNCER_MARKERS)
-
 
 def _build_engine(database_url: str) -> AsyncEngine:
     """
@@ -36,9 +30,15 @@ def _build_engine(database_url: str) -> AsyncEngine:
     ----------------------------------
     Supabase exposes a PgBouncer transaction-pooler on port 6543.
     asyncpg's prepared-statement cache is incompatible with transaction
-    pooling.  Disable the statement cache to prevent
-    DuplicatePreparedStatementError when the server re-uses an underlying
-    connection that already has named prepared statements registered.
+    pooling — it raises DuplicatePreparedStatementError when the server
+    re-uses an underlying pooled connection that already has named prepared
+    statements registered from a previous session.
+
+    We unconditionally set statement_cache_size=0 for all asyncpg/Postgres
+    connections.  This is safe for non-PgBouncer direct connections too: it
+    simply disables asyncpg's client-side statement cache (minor perf cost,
+    no correctness impact), and it avoids the fragile URL-pattern detection
+    that can silently miss PgBouncer deployments with non-standard URLs.
 
     Standalone CLI scripts should additionally switch to the session pooler
     (port 5432) which fully supports the extended query protocol.
@@ -53,9 +53,10 @@ def _build_engine(database_url: str) -> AsyncEngine:
         kwargs["pool_size"] = settings.db_pool_size
         kwargs["max_overflow"] = settings.db_max_overflow
         kwargs["pool_recycle"] = settings.db_pool_recycle_seconds
-        if _is_pgbouncer_url(database_url):
-            # Disable asyncpg statement cache for PgBouncer transaction mode.
-            kwargs["connect_args"] = {"statement_cache_size": 0}
+        # Always disable asyncpg prepared-statement cache for Postgres.
+        # Required for PgBouncer transaction-mode (Supabase pooler);
+        # harmless for direct connections.
+        kwargs["connect_args"] = {"statement_cache_size": 0}
 
     return create_async_engine(database_url, **kwargs)
 
