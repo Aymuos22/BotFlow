@@ -21,6 +21,18 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
+# Switch from PgBouncer transaction pooler (port 6543) to session pooler
+# (port 5432) so asyncpg prepared statements work in standalone scripts.
+import os as _os
+try:
+    from dotenv import load_dotenv as _load_dotenv
+    _load_dotenv(_ROOT / ".env", override=False)
+except ImportError:
+    pass
+_db_url = _os.environ.get("DATABASE_URL", "")
+if ":6543/" in _db_url:
+    _os.environ["DATABASE_URL"] = _db_url.replace(":6543/", ":5432/")
+
 from app.core.config import settings  # noqa: E402
 from app.core.database import AsyncSessionLocal, engine  # noqa: E402
 from app.integrations.weaviate.client import WeaviateClient  # noqa: E402

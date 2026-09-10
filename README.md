@@ -390,7 +390,11 @@ Chatbot-engine/
 │
 ├── scripts/                      # One-off ops scripts
 │   ├── ec2_setup.py              # Deploy to EC2
-│   ├── ingest_local_data.py      # Ingest markdown/docs into Weaviate
+│   ├── ingest_local_data.py      # Ingest a directory of docs into Weaviate
+│   ├── ingest_file.py            # Ingest a single file into Weaviate
+│   ├── onboard_company.py        # Full company onboarding (DB + Weaviate), no HTTP server
+│   ├── setup_myresume_twilio.py  # Configure Twilio sandbox for myresume company
+│   ├── activate_myresume.py      # Activate myresume after credentials are set
 │   ├── import_product_catalog.py # Bulk import products from Excel/CSV
 │   ├── copy_company_config.py    # Clone one company's config to another
 │   └── set_product_images.py     # Assign images to products
@@ -790,7 +794,7 @@ Each tenant's files are namespace-isolated.
 | `LLM_PROVIDER` | `groq` | `groq` or `openai` |
 | `GROQ_API_KEY` | — | From [console.groq.com](https://console.groq.com) |
 | `OPENAI_API_KEY` | — | Used only when `LLM_PROVIDER=openai` |
-| `LLM_MODEL` | — | e.g. `llama-3.3-70b-versatile` (Groq) or `gpt-4o-mini` (OpenAI) |
+| `LLM_MODEL` | — | e.g. `qwen/qwen3.8-27b` (Groq) or `gpt-4o-mini` (OpenAI). Run `groq.models.list()` to see models available on your key. |
 | `LLM_TEMPERATURE` | `1` | Response creativity (0–2) |
 | `LLM_MAX_COMPLETION_TOKENS` | `8192` | Max tokens per response |
 | `LLM_STREAM` | `false` | Use streaming and aggregate chunks |
@@ -924,7 +928,34 @@ python scripts/import_product_catalog.py --company-id <uuid> --file data/skrange
 
 ---
 
-## 11. Production Deployment (EC2)
+## 11. Production Deployment (Render)
+
+### Deploy to Render (Recommended — Free Tier)
+
+1. Push your code to GitHub
+2. Go to [render.com](https://render.com) → **New Web Service** → connect your repo
+3. Set **Build Command**: `pip install -r requirements.txt`
+4. Set **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+5. Add all environment variables from your `.env` in the **Environment** tab
+6. Click **Deploy**
+
+Your service URL will be `https://<service-name>.onrender.com`.
+
+Update `PUBLIC_BASE_URL` in Render's environment variables to match.
+
+> **Important:** Set `LLM_MODEL` to a model available on your Groq key.
+> Check available models: `python -c "from groq import Groq; [print(m.id) for m in Groq().models.list().data]"`
+
+### First-time DB migration on Render
+
+```bash
+# In Render → Shell tab (or via one-off job)
+alembic upgrade head
+```
+
+---
+
+## 11b. Production Deployment (EC2)
 
 ### Prerequisites
 
@@ -1014,6 +1045,46 @@ python -m pytest app/tests/test_e2e.py -v
 ---
 
 ## 13. Ops & Admin Scripts
+
+### Ingest a Single File
+
+Ingest any PDF, TXT, MD, CSV, or JSON file directly into a company's Weaviate collection without touching a directory.
+
+```bash
+python scripts/ingest_file.py \
+  --file "path/to/resume.pdf" \
+  --company-id <uuid>
+```
+
+Options:
+- `--chunk-size` (default from `CHUNK_SIZE` env)
+- `--chunk-overlap` (default from `CHUNK_OVERLAP` env)
+
+### Onboard a New Company (CLI)
+
+Full onboarding without the HTTP server:
+
+```bash
+# Step 1 – Create company, config, channel, and Weaviate collection
+python scripts/onboard_company.py \
+  --company-name myresume \
+  --display-name "MyResume" \
+  --phone +14155238886
+
+# Step 2 – Configure Twilio (Sandbox or production number)
+$env:TWILIO_ACCOUNT_SID="ACxxxxxxxxxx"
+$env:TWILIO_AUTH_TOKEN="your_token"
+$env:TWILIO_WHATSAPP_NUMBER="whatsapp:+14155238886"   # sandbox
+python scripts/setup_myresume_twilio.py --enable-twilio-provider
+
+# Step 3 – Activate
+python scripts/activate_myresume.py
+```
+
+> **PgBouncer note:** All CLI scripts automatically switch the `DATABASE_URL` from
+> the Supabase transaction pooler (port 6543) to the session pooler (port 5432) so
+> asyncpg prepared statements work correctly. The FastAPI server continues to use the
+> transaction pooler with `statement_cache_size=0`.
 
 ### Clone a Company Config
 

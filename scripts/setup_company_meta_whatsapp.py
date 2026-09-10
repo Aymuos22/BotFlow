@@ -30,6 +30,13 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
+# Switch from PgBouncer transaction pooler (port 6543) to session pooler
+# (port 5432) so asyncpg prepared statements work in standalone scripts.
+import os as _os
+_db_url = _os.environ.get("DATABASE_URL", "")
+if ":6543/" in _db_url:
+    _os.environ["DATABASE_URL"] = _db_url.replace(":6543/", ":5432/")
+
 from app.core.database import AsyncSessionLocal, engine  # noqa: E402
 from app.models.company import Company  # noqa: E402
 from app.repositories.company_config_repository import CompanyConfigRepository  # noqa: E402
