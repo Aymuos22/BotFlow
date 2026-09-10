@@ -92,7 +92,7 @@ services:
       - key: EMBEDDING_BATCH_SIZE
         value: "128"
       - key: RAG_EMBEDDINGS_ENABLED
-        value: "false"
+        value: "true"
 
       # ── Weaviate ─────────────────────────────────────────────────────────────
       - key: WEAVIATE_URL
