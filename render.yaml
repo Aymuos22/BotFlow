@@ -68,7 +68,7 @@ services:
       - key: GROQ_API_KEY
         sync: false
       - key: LLM_MODEL
-        value: llama-3.3-70b-versatile
+        value: qwen/qwen3.8-27b
       - key: LLM_TIMEOUT_SECONDS
         value: "60"
       - key: LLM_TEMPERATURE
@@ -136,7 +136,7 @@ services:
       - key: CORS_ALLOW_ALL
         value: "true"
       - key: CORS_ORIGINS
-        sync: false
+        value: "https://bot-flow-lsug-theta.vercel.app,https://bot-flow-nine.vercel.app"
 
   # ── Frontend (React/Vite static site) ─────────────────────────────────────
   - type: static
@@ -187,7 +187,7 @@ services:
 #     - key: GROQ_API_KEY
 #       sync: false
 #     - key: LLM_MODEL
-#       value: llama-3.3-70b-versatile
+#       value: qwen/qwen3.8-27b
 #     - key: SUPABASE_URL
 #       sync: false
 #     - key: SUPABASE_SERVICE_ROLE_KEY
