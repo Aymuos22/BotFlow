@@ -19,49 +19,53 @@ from sqlalchemy.ext.asyncio import (
 from app.core.config import settings
 
 
+def _coerce_to_session_pooler(url: str) -> str:
+    """
+    Supabase exposes two PgBouncer endpoints:
+
+      • Transaction pooler  — port 6543  (pool_mode=transaction)
+        asyncpg creates *named* prepared statements (``__asyncpg_stmt_N__``)
+        that get stranded on the backend connection when the SQLAlchemy pool
+        returns the connection mid-session.  On the next checkout PgBouncer
+        may hand back a backend that still has ``__asyncpg_stmt_1__``
+        registered → DuplicatePreparedStatementError.
+        Setting statement_cache_size=0 is NOT sufficient: asyncpg still
+        creates named statements; it just stops caching the objects.
+
+      • Session pooler      — port 5432  (pool_mode=session)
+        Each PgBouncer "session" maps to one persistent backend connection
+        for its entire lifetime, so prepared statements never collide across
+        different asyncpg instances.
+
+    Automatically rewrite port 6543 → 5432 so the app always connects via
+    the session pooler.  No-op for direct connections and any other port.
+    """
+    return url.replace(":6543/", ":5432/")
+
+
 def _build_engine(database_url: str) -> AsyncEngine:
-    """
-    Build an async SQLAlchemy engine with sensible pool settings.
-
-    SQLite does not support connection pools the same way Postgres does,
-    so pool parameters are only applied for Postgres connections.
-
-    PgBouncer (transaction mode) note
-    ----------------------------------
-    Supabase exposes a PgBouncer transaction-pooler on port 6543.
-    asyncpg's prepared-statement cache is incompatible with transaction
-    pooling — it raises DuplicatePreparedStatementError when the server
-    re-uses an underlying pooled connection that already has named prepared
-    statements registered from a previous session.
-
-    We unconditionally set statement_cache_size=0 for all asyncpg/Postgres
-    connections.  This is safe for non-PgBouncer direct connections too: it
-    simply disables asyncpg's client-side statement cache (minor perf cost,
-    no correctness impact), and it avoids the fragile URL-pattern detection
-    that can silently miss PgBouncer deployments with non-standard URLs.
-
-    Standalone CLI scripts should additionally switch to the session pooler
-    (port 5432) which fully supports the extended query protocol.
-    """
+    """Build an async SQLAlchemy engine with sensible pool settings."""
     kwargs: dict = {"echo": settings.db_echo}
 
     if "sqlite" in database_url:
-        # SQLite specific: disable thread check for async usage
         kwargs["connect_args"] = {"check_same_thread": False}
     else:
         kwargs["pool_pre_ping"] = True
         kwargs["pool_size"] = settings.db_pool_size
         kwargs["max_overflow"] = settings.db_max_overflow
         kwargs["pool_recycle"] = settings.db_pool_recycle_seconds
-        # Always disable asyncpg prepared-statement cache for Postgres.
-        # Required for PgBouncer transaction-mode (Supabase pooler);
-        # harmless for direct connections.
+        # Belt-and-suspenders: disable asyncpg's own statement cache too.
         kwargs["connect_args"] = {"statement_cache_size": 0}
 
     return create_async_engine(database_url, **kwargs)
 
 
-engine: AsyncEngine = _build_engine(settings.database_url)
+# Rewrite the URL before building the engine.  When DATABASE_URL points at
+# Supabase's transaction pooler (port 6543) this switches it to the session
+# pooler (port 5432) which fully supports asyncpg's prepared statements.
+_db_url = _coerce_to_session_pooler(settings.database_url)
+
+engine: AsyncEngine = _build_engine(_db_url)
 
 AsyncSessionLocal: async_sessionmaker[AsyncSession] = async_sessionmaker(
     bind=engine,

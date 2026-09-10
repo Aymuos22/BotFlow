@@ -40,7 +40,7 @@ COPY --from=builder /install /usr/local
 # Bump BUILD_CACHE_BUST to force Docker to invalidate this layer and all
 # subsequent layers (e.g. after changes to app/ that Render's registry
 # cache incorrectly serves as a stale hit).
-ARG BUILD_CACHE_BUST=1
+ARG BUILD_CACHE_BUST=2
 COPY --chown=appuser:appuser app/ ./app/
 
 # Copy Alembic migration tooling
