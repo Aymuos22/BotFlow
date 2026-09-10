@@ -80,28 +80,25 @@ _IDENTITY_QUERY_RE = re.compile(
 
 _IDENTITY_ANSWERS = {
     "english": (
-        "I'm Alka Sharma from SkinRange, your support assistant. I can help with products, "
-        "orders, returns, and basic usage questions."
+        "I'm a helpful AI assistant. I can help with any questions based on the information available to me."
     ),
     "hinglish": (
-        "Main Alka Sharma from SkinRange hoon, aapki support assistant. Main products, orders, "
-        "returns aur basic usage questions mein help kar sakti hoon."
+        "Main ek AI assistant hoon. Main aapki sawal mein help kar sakta/sakti hoon."
     ),
     "hindi": (
-        "मैं अलका शर्मा हूँ, SkinRange से आपकी सपोर्ट असिस्टेंट। मैं प्रोडक्ट, ऑर्डर, "
-        "रिटर्न और basic usage सवालों में मदद कर सकती हूँ।"
+        "मैं एक AI असिस्टेंट हूँ। मैं उपलब्ध जानकारी के आधार पर आपके सवालों में मदद कर सकता/सकती हूँ।"
     ),
 }
 
 _FIRST_GREETING_ANSWERS = {
     "english": (
-        "👋 Hi, I'm Alka Sharma from SkinRange. How can I help you today?"
+        "👋 Hi! I'm your AI assistant. How can I help you today?"
     ),
     "hinglish": (
-        "🙏 Namaste, main Alka Sharma from SkinRange hoon. Aaj main aapki kya help kar sakti hoon?"
+        "🙏 Namaste! Main aapka AI assistant hoon. Aaj main aapki kya help kar sakta/sakti hoon?"
     ),
     "hindi": (
-        "🙏 नमस्ते, मैं अलका शर्मा हूँ, SkinRange से। आज मैं आपकी क्या मदद कर सकती हूँ?"
+        "🙏 नमस्ते! मैं आपका AI असिस्टेंट हूँ। आज मैं आपकी क्या मदद कर सकता/सकती हूँ?"
     ),
 }
 
