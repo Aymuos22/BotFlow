@@ -138,6 +138,10 @@ services:
       - key: CORS_ORIGINS
         value: "https://bot-flow-lsug-theta.vercel.app,https://bot-flow-nine.vercel.app"
 
+      # ── Error detail (set to "true" temporarily to debug 500 errors) ─────────
+      - key: EXPOSE_INTERNAL_ERROR_DETAIL
+        value: "true"
+
   # ── Frontend (React/Vite static site) ─────────────────────────────────────
   - type: static
     name: botflow-web

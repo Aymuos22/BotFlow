@@ -152,6 +152,36 @@ def create_app() -> FastAPI:
     # Exception handlers
     # ------------------------------------------------------------------ #
 
+    def _cors_headers_for_request(request: Request) -> dict[str, str]:
+        """
+        Return CORS response headers for the given request's Origin.
+
+        Starlette's CORSMiddleware normally injects these, but when an
+        unhandled exception propagates through a BaseHTTPMiddleware layer
+        the middleware's send-wrapper can be bypassed.  Adding the headers
+        directly in every exception handler guarantees they are always
+        present, even on 500 responses — preventing browsers from masking
+        the real error with a spurious CORS message.
+        """
+        origin = request.headers.get("origin")
+        if not origin:
+            return {}
+        # Mirror the app-level CORS policy: allow_all → "*"; otherwise echo
+        # the origin if it is in the allow-list.
+        if _cors_origins == ["*"]:
+            return {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Allow-Methods": "*",
+            }
+        if origin in _cors_origins:
+            return {
+                "Access-Control-Allow-Origin": origin,
+                "Access-Control-Allow-Credentials": "true",
+                "Vary": "Origin",
+            }
+        return {}
+
     @app.exception_handler(AppException)
     async def app_exception_handler(
         request: Request, exc: AppException
@@ -175,6 +205,7 @@ def create_app() -> FastAPI:
                 code=exc.code,
                 detail=exc.detail if settings.debug else None,
             ).model_dump(),
+            headers=_cors_headers_for_request(request),
         )
         resp.headers[HEADER_NAME] = cid
         return resp
@@ -198,6 +229,7 @@ def create_app() -> FastAPI:
                 error=error_detail,
                 code="VALIDATION_ERROR",
             ).model_dump(),
+            headers=_cors_headers_for_request(request),
         )
 
     @app.exception_handler(Exception)
@@ -218,6 +250,7 @@ def create_app() -> FastAPI:
                     else None
                 ),
             ).model_dump(),
+            headers=_cors_headers_for_request(request),
         )
 
     # ------------------------------------------------------------------ #
