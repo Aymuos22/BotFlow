@@ -104,13 +104,13 @@ services:
       - key: RAG_SCORE_THRESHOLD
         value: "0.4"
       - key: RAG_TOP_K
-        value: "5"
+        value: "7"
       - key: RAG_CONVERSATION_TURNS
         value: "8"
       - key: RAG_AUGMENT_SEARCH_WITH_HISTORY
         value: "true"
       - key: RAG_HYBRID_ALPHA
-        value: "0.5"
+        value: "0.7"
       - key: CHUNK_SIZE
         value: "1000"
       - key: CHUNK_OVERLAP
